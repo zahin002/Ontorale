@@ -11,3 +11,4 @@ export function checkWin(aliveMafia: number, aliveNonMafia: number, mode: WinMod
       return aliveMafia >= aliveNonMafia ? 'mafia' : null;
   }
 }
+

@@ -188,3 +188,4 @@ describe('roles module', () => {
     expect(invalidAssigned).toEqual({ error: 'roleConfigInvalid' });
   });
 });
+

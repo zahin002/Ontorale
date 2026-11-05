@@ -57,3 +57,4 @@ describe('events factory', () => {
     expect(e).toEqual({ kind: 'gameOver', winner: 'citizens' });
   });
 });
+

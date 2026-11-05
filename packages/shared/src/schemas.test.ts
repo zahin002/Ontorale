@@ -89,3 +89,4 @@ describe('schemas validation', () => {
     expect(VoiceReadySchema.parse({ channel: 'mafia' })).toEqual({ channel: 'mafia' });
   });
 });
+
