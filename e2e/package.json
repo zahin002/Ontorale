@@ -1,0 +1,14 @@
+{
+  "name": "@ontorale/e2e",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.0",
+    "@types/node": "^22.9.0",
+    "typescript": "^5.6.3"
+  }
+}
