@@ -79,7 +79,7 @@ ontorale/
 | **Killer**   | খুনি          | Selects one citizen to eliminate each night; coordinates in private Mafia text & voice channels. Ability cannot be disabled by Constable.          |
 | **Silencer** | নিস্তব্ধকারী  | Silences one player at night (Citizen or Mafia teammate); the target cannot speak or type during the subsequent day. Subject to Constable disable. |
 | **Confuser** | বিভ্রান্তকারী | Targets a player at night (Citizen or Mafia teammate) to make Detective checks show the opposite allegiance. Subject to Constable disable.         |
-| **Stalker**  | অনুসরণকারী    | Stalks one alive Citizen at night to reveal their exact secret role ID privately (2 lifetime checks limit). Subject to Constable disable.          |
+| **Stalker**  | অনুসরণকারী    | Stalks one alive Citizen at night to reveal their exact secret role ID privately (1 lifetime check limit). Subject to Constable disable.           |
 
 ### Game Phase Lifecycle
 

@@ -44,7 +44,7 @@
   "ability.skip": "Do Nothing",
   "ability.disabled": "Your ability is currently disabled",
   "detective.remaining": "Investigations remaining: {n}/2",
-  "stalker.remaining": "Checks remaining: {n}/2",
+  "stalker.remaining": "Checks remaining: {n}/1",
   "ui.nickname": "Nickname",
   "ui.createRoom": "Create Room",
   "ui.roomCode": "Room Code",

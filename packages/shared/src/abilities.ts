@@ -74,7 +74,7 @@ export const ABILITIES: Record<string, AbilityDef> = {
     team: 'mafia',
     actionKind: 'stalk',
     disableable: true,
-    lifetimeLimit: 2,
+    lifetimeLimit: 1,
   },
   silence: {
     id: 'silence',

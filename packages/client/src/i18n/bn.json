@@ -44,7 +44,7 @@
   "ability.skip": "কিছু করবেন না",
   "ability.disabled": "আপনার ক্ষমতা আপাতত অকার্যকর",
   "detective.remaining": "তদন্ত বাকি: {n}/২",
-  "stalker.remaining": "যাচাই বাকি: {n}/২",
+  "stalker.remaining": "যাচাই বাকি: {n}/১",
   "ui.nickname": "ডাকনাম",
   "ui.createRoom": "নতুন রুম তৈরি করুন",
   "ui.roomCode": "রুম কোড",

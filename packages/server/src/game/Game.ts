@@ -238,7 +238,7 @@ export class Game {
     const s = this.getAbilityState(playerId);
     return {
       investigate: { remaining: Math.max(0, 2 - (s.used['investigate'] ?? 0)) },
-      stalk: { remaining: Math.max(0, 2 - (s.used['stalk'] ?? 0)) },
+      stalk: { remaining: Math.max(0, 1 - (s.used['stalk'] ?? 0)) },
       shoot: {
         remaining:
           p.role === 'police' ? this.policeBullets : Math.max(0, 1 - (s.used['shoot'] ?? 0)),
@@ -947,7 +947,7 @@ export class Game {
         case 'habildar':
           return aliveOthers;
         case 'stalker':
-          if ((abilityState.used['stalk'] ?? 0) >= 2) return [];
+          if ((abilityState.used['stalk'] ?? 0) >= 1) return [];
           if (isActorDisabled) return [];
           return this.getAlivePlayers()
             .filter((p) => p.id !== playerId && p.role && !isMafiaRole(p.role))

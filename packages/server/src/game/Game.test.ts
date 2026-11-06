@@ -291,4 +291,42 @@ describe('GAME State Machine & Rules', () => {
     // Disconnected player 5 removed from room
     expect(game.getPlayer(players[5].id)).toBeUndefined();
   });
+
+  it('Stalker has 1 lifetime check limit and ability is exhausted after 1 use', () => {
+    const { game, players } = setupGameWithRoles(6);
+    const stalker = players[0];
+    const citizen = players[1];
+    stalker.role = 'stalker';
+    citizen.role = 'citizen';
+    game.phase = 'night';
+    game.round = 1;
+
+    // Initially has 1 remaining
+    const statusBefore = game.getPlayerAbilityStatus(stalker.id);
+    expect(statusBefore?.stalk?.remaining).toBe(1);
+
+    // Allowed targets returns citizen
+    const targets = game.getAllowedTargets(stalker.id);
+    expect(targets).toContain(citizen.id);
+
+    // Submit stalk action
+    const submitRes = game.submitAction(stalker.id, 'stalk', citizen.id);
+    expect(submitRes).toEqual({ ok: true });
+
+    // Mark stalk used
+    const abilityState = game.getAbilityState(stalker.id);
+    abilityState.used['stalk'] = 1;
+
+    // Now remaining is 0
+    const statusAfter = game.getPlayerAbilityStatus(stalker.id);
+    expect(statusAfter?.stalk?.remaining).toBe(0);
+
+    // Targets is now empty
+    const targetsAfter = game.getAllowedTargets(stalker.id);
+    expect(targetsAfter).toHaveLength(0);
+
+    // Submitting again fails with limitReached
+    const secondSubmit = game.submitAction(stalker.id, 'stalk', citizen.id);
+    expect(secondSubmit).toEqual({ error: 'limitReached' });
+  });
 });

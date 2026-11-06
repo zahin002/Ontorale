@@ -177,7 +177,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({ state }) => {
       }
       case 'stalker': {
         actionKind = 'stalk';
-        const remaining = me.abilityStatus?.stalk?.remaining ?? 2;
+        const remaining = me.abilityStatus?.stalk?.remaining ?? 1;
         title = t('stalker.remaining', { n: remaining });
         isExhausted = remaining <= 0;
         break;
