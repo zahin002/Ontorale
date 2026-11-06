@@ -1,4 +1,5 @@
-name: CI
+name: CI/CD Pipeline
+
 on:
   push:
     branches: [main, dev]
@@ -13,6 +14,7 @@ permissions:
 
 jobs:
   verify:
+    name: Code Quality & Unit/Integration Tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -22,12 +24,82 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - run: pnpm format:check
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test:unit
+      - run: pnpm test:integration
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: coverage
           path: '**/coverage'
           if-no-files-found: ignore
+
+  e2e:
+    name: Playwright E2E Suite (E1-E7)
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: e2e/playwright-report
+          if-no-files-found: ignore
+
+  docker:
+    name: Docker Build & Smoke Test
+    needs: [verify, e2e]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build Docker image
+        run: docker build -t ontorale:ci .
+      - name: Run container & verify /healthz
+        run: |
+          docker run -d --name ontorale-smoke -p 3000:3000 ontorale:ci
+          sleep 5
+          for i in {1..15}; do
+            if curl -sf http://127.0.0.1:3000/healthz | grep -q '"ok":true'; then
+              echo "Smoke test passed: /healthz is healthy"
+              docker stop ontorale-smoke
+              exit 0
+            fi
+            echo "Waiting for healthz... attempt $i"
+            sleep 2
+          done
+          echo "Smoke test failed"
+          docker logs ontorale-smoke
+          docker stop ontorale-smoke
+          exit 1
+
+  deploy:
+    name: Production Deployment
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: [docker]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Trigger Server Deploy
+        if: env.DEPLOY_HOST != ''
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+        run: |
+          echo "Deploying commit ${{ github.sha }} to production..."
+          # When secrets are configured, execute deploy.sh over SSH:
+          # ssh -i <(echo "$DEPLOY_SSH_KEY") "$DEPLOY_USER@$DEPLOY_HOST" "/opt/ontorale/deploy/deploy.sh ${{ github.sha }}"

@@ -1,0 +1,6 @@
+{$DOMAIN} {
+    encode zstd gzip
+
+    # Reverse proxy HTTP and WebSocket traffic to Ontorale app container
+    reverse_proxy app:3000
+}
