@@ -65,19 +65,19 @@ ontorale/
 
 | Role                      | Bengali Name  | Ability & Rules                                                                                 |
 | :------------------------ | :------------ | :---------------------------------------------------------------------------------------------- |
-| **Citizen (নাগরিক)**      | সাধারণ নাগরিক | Votes during the day to identify and eliminate the Mafia.                                       |
-| **Doctor (ডাক্তার)**      | ডাক্তার       | Chooses one player each night to protect from death (cannot protect self twice in a row).       |
-| **Police (পুলিশ)**        | পুলিশ         | Starts with 2 bullets; can choose to shoot one target each night until ammunition is depleted.  |
-| **Detective (গোয়েন্দা)** | গোয়েন্দা     | Investigates one player each night to uncover whether they are Mafia or Citizen.                |
-| **Mayor (মেয়র)**         | মেয়র         | Has daytime tiebreaker authority: if a vote ends in a tie, the Mayor selects who is eliminated. |
+| **Citizen**      | সাধারণ নাগরিক | Votes during the day to identify and eliminate the Mafia.                                       |
+| **Doctor**      | ডাক্তার       | Chooses one player each night to protect from death (cannot protect self twice in a row).       |
+| **Police**        | পুলিশ         | Starts with 2 bullets; can choose to shoot one target each night until ammunition is depleted.  |
+| **Detective** | গোয়েন্দা     | Investigates one player each night to uncover whether they are Mafia or Citizen.                |
+| **Mayor**         | মেয়র         | Has daytime tiebreaker authority: if a vote ends in a tie, the Mayor selects who is eliminated. |
 
 ### Team Mafia
 
 | Role                         | Bengali Name          | Ability & Rules                                                                                  |
 | :--------------------------- | :-------------------- | :----------------------------------------------------------------------------------------------- |
-| **Killer (খুনি)**            | খুনি          | Selects one citizen to eliminate each night; coordinates in private Mafia text & voice channels. |
-| **Silencer (নিস্তব্ধকারী)**  | নিস্তব্ধকারী  | Silences one player at night; the target cannot speak or type during the subsequent day.         |
-| **Confuser (বিভ্রান্তকারী)** | বিভ্রান্তকারী | Targets a player at night to make Detective investigations on them show the opposite allegiance. |
+| **Killer**            | খুনি          | Selects one citizen to eliminate each night; coordinates in private Mafia text & voice channels. |
+| **Silencer**  | নিস্তব্ধকারী  | Silences one player at night; the target cannot speak or type during the subsequent day.         |
+| **Confuser** | বিভ্রান্তকারী | Targets a player at night to make Detective investigations on them show the opposite allegiance. |
 
 ### Game Phase Lifecycle
 
