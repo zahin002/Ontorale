@@ -3,6 +3,7 @@ import type { ClientState, RoomSettings } from '@ontorale/shared';
 import { useGameStore } from '../store/useGameStore';
 import { t } from '../i18n';
 import { Users, Settings, Play, ShieldAlert, Copy, Check } from 'lucide-react';
+import { ChatPanel } from '../components/ChatPanel';
 
 interface LobbyProps {
   state: ClientState;
@@ -191,6 +192,7 @@ export const Lobby: React.FC<LobbyProps> = ({ state }) => {
                   ).map(([key, labelKey]) => (
                     <button
                       key={key}
+                      data-testid={`toggle-role-${key}`}
                       disabled={!isHost}
                       onClick={() => handleToggleRole(key)}
                       className={`w-full py-2 px-3 rounded-lg border flex items-center justify-between font-semibold transition ${
@@ -211,6 +213,9 @@ export const Lobby: React.FC<LobbyProps> = ({ state }) => {
           </div>
         </div>
       </div>
+
+      {/* Lobby Chat */}
+      <ChatPanel state={state} />
     </div>
   );
 };
