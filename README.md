@@ -72,7 +72,7 @@ ontorale/
 | **Police**               | পুলিশ         | Starts with 2 bullets; can choose to shoot one target each night until ammunition is depleted.                                                                                    |
 | **Detective**            | গোয়েন্দা     | Investigates one player at night to uncover whether they are Mafia or Citizen (2 lifetime investigations limit).                                                                  |
 | **Mayor**                | মেয়র         | Has daytime tiebreaker authority: if a vote ends in a tie, the Mayor selects who is eliminated.                                                                                   |
-| **Constable / Habildar** | হাবিলদার      | Optional Citizen role. Night actions: shoot (1 bullet lifetime limit, Doctor can save), disable an alive Mafia member's abilities for 2 rounds (1-round cooldown), or do nothing. |
+| **Constable** | হাবিলদার      | Optional Citizen role. Night actions: shoot (1 bullet lifetime limit, Doctor can save), disable an alive Mafia member's abilities for 2 rounds (1-round cooldown), or do nothing. |
 
 ### Team Mafia
 
