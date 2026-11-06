@@ -21,7 +21,7 @@ export default defineConfig({
   webServer: {
     command: 'node ../packages/server/dist/index.js',
     url: 'http://localhost:3000/healthz',
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: false,
     cwd: __dirname,
     env: {
       NODE_ENV: 'test',
