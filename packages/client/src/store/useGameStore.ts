@@ -92,7 +92,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
     let s = get().socket;
     if (s && s.connected) return s;
 
-    s = io({
+    const serverUrl =
+      import.meta.env.VITE_SERVER_URL ||
+      (typeof window !== 'undefined' && window.location.port === '5173'
+        ? `${window.location.protocol}//${window.location.hostname}:3000`
+        : undefined);
+
+    s = io(serverUrl, {
       transports: ['websocket', 'polling'],
       autoConnect: true,
     });
