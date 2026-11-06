@@ -75,9 +75,9 @@ ontorale/
 
 | Role                         | Bengali Name          | Ability & Rules                                                                                  |
 | :--------------------------- | :-------------------- | :----------------------------------------------------------------------------------------------- |
-| **Killer (খুনি)**            | মাফিয়া খুনি          | Selects one citizen to eliminate each night; coordinates in private Mafia text & voice channels. |
-| **Silencer (নিস্তব্ধকারী)**  | মাফিয়া নিস্তব্ধকারী  | Silences one player at night; the target cannot speak or type during the subsequent day.         |
-| **Confuser (বিভ্রান্তকারী)** | মাফিয়া বিভ্রান্তকারী | Targets a player at night to make Detective investigations on them show the opposite allegiance. |
+| **Killer (খুনি)**            | খুনি          | Selects one citizen to eliminate each night; coordinates in private Mafia text & voice channels. |
+| **Silencer (নিস্তব্ধকারী)**  | নিস্তব্ধকারী  | Silences one player at night; the target cannot speak or type during the subsequent day.         |
+| **Confuser (বিভ্রান্তকারী)** | বিভ্রান্তকারী | Targets a player at night to make Detective investigations on them show the opposite allegiance. |
 
 ### Game Phase Lifecycle
 
