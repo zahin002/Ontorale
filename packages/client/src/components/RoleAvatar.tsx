@@ -117,4 +117,3 @@ export const RoleAvatar: React.FC<RoleAvatarProps> = ({ role, size = 'md', class
     </div>
   );
 };
-

@@ -152,7 +152,15 @@ export const VoiceControls: React.FC<VoiceControlsProps> = ({
     }
 
     updateMicPublish();
-  }, [micEnabled, canSpeakNow, canPublishInPub, canPublishInMaf, pubRoom, mafRoom, permissionDenied]);
+  }, [
+    micEnabled,
+    canSpeakNow,
+    canPublishInPub,
+    canPublishInMaf,
+    pubRoom,
+    mafRoom,
+    permissionDenied,
+  ]);
 
   if (!voiceAvailable) return null;
 

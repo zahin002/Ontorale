@@ -39,7 +39,8 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({ state }) => {
             <span>{t('ability.disabled')}</span>
           </div>
           <div className="text-xs text-slate-400">
-            হাবিলদারের কার্যকলাপে আপনার ক্ষমতা এই রাতে অকার্যকর রয়েছে। তবে আপনি মাফিয়া চ্যাট এবং ভয়েস ব্যবহার করতে পারবেন।
+            হাবিলদারের কার্যকলাপে আপনার ক্ষমতা এই রাতে অকার্যকর রয়েছে। তবে আপনি মাফিয়া চ্যাট এবং
+            ভয়েস ব্যবহার করতে পারবেন।
           </div>
         </div>
       );
@@ -106,9 +107,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({ state }) => {
           </div>
 
           {habildarMode === 'skip' ? (
-            <div className="text-xs text-slate-400 py-2">
-              আজ রাতে আপনি কোনো পদক্ষেপ নেবেন না।
-            </div>
+            <div className="text-xs text-slate-400 py-2">আজ রাতে আপনি কোনো পদক্ষেপ নেবেন না।</div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
               {me.allowedTargets.map((targetId) => {

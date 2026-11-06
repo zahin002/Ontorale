@@ -21,9 +21,7 @@ export function buildRoleList(
   const mafia = MAFIA_COUNT[n];
   if (mafia === undefined) return { error: 'playerCountInvalid' };
   const optMafia =
-    Number(Boolean(opt.silencer)) +
-    Number(Boolean(opt.confuser)) +
-    Number(Boolean(opt.stalker));
+    Number(Boolean(opt.silencer)) + Number(Boolean(opt.confuser)) + Number(Boolean(opt.stalker));
   const killers = mafia - optMafia;
   const minKillers = mafia >= 2 ? 2 : 1;
   if (killers < minKillers) return { error: 'roleConfigInvalid' };

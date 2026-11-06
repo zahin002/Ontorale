@@ -118,13 +118,7 @@ export function resolveNight(
   let silenced: PlayerId | null = null;
   const silencer = actor('silencer');
   const st = a.silencerTarget;
-  if (
-    silencer &&
-    !silencer.disabled &&
-    alive(st) &&
-    st !== silencer.id &&
-    !deathMap.has(st)
-  ) {
+  if (silencer && !silencer.disabled && alive(st) && st !== silencer.id && !deathMap.has(st)) {
     silenced = st;
   }
 
@@ -146,12 +140,7 @@ export function resolveNight(
   let stalkResult: NightOutcome['stalkResult'] = null;
   const stalker = actor('stalker');
   const stalkTarget = a.stalkerTarget;
-  if (
-    stalker &&
-    !stalker.disabled &&
-    alive(stalkTarget) &&
-    stalkTarget !== stalker.id
-  ) {
+  if (stalker && !stalker.disabled && alive(stalkTarget) && stalkTarget !== stalker.id) {
     const targetPlayer = byId.get(stalkTarget);
     if (targetPlayer && !isMafiaRole(targetPlayer.role)) {
       stalkResult = { target: stalkTarget, role: targetPlayer.role };

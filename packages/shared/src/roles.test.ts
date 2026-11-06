@@ -80,10 +80,7 @@ describe('roles module', () => {
 
                     const totalMafia = roles.filter(
                       (r) =>
-                        r === 'killer' ||
-                        r === 'silencer' ||
-                        r === 'confuser' ||
-                        r === 'stalker',
+                        r === 'killer' || r === 'silencer' || r === 'confuser' || r === 'stalker',
                     ).length;
                     expect(totalMafia).toBe(expectedMafiaTotal);
                     expect(roles.filter((r) => r === 'citizen').length).toBeGreaterThanOrEqual(0);

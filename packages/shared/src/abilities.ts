@@ -96,9 +96,7 @@ export function getAbilityForRoleAndAction(
   role: Role,
   actionKind: ActionKind,
 ): AbilityDef | undefined {
-  return Object.values(ABILITIES).find(
-    (a) => a.role === role && a.actionKind === actionKind,
-  );
+  return Object.values(ABILITIES).find((a) => a.role === role && a.actionKind === actionKind);
 }
 
 export { isMafiaRole, teamForRole };

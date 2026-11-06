@@ -1,7 +1,16 @@
 import React, { useRef, useEffect } from 'react';
 import type { GameEvent, Phase, Role } from '@ontorale/shared';
 import { t } from '../i18n';
-import { Bell, Skull, ShieldCheck, VolumeX, UserCheck, AlertTriangle, Moon, Sun } from 'lucide-react';
+import {
+  Bell,
+  Skull,
+  ShieldCheck,
+  VolumeX,
+  UserCheck,
+  AlertTriangle,
+  Moon,
+  Sun,
+} from 'lucide-react';
 import { RoleAvatar } from './RoleAvatar';
 
 interface EventLogProps {

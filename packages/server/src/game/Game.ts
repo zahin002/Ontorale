@@ -76,10 +76,7 @@ export class Game {
     PlayerId,
     { round: number; target: PlayerId; result: 'mafia' | 'notMafia' }[]
   >();
-  private stalkerResults = new Map<
-    PlayerId,
-    { round: number; target: PlayerId; role: Role }[]
-  >();
+  private stalkerResults = new Map<PlayerId, { round: number; target: PlayerId; role: Role }[]>();
   private playerAbilityStates = new Map<PlayerId, AbilityState>();
 
   public publishedVoteResult: {
@@ -244,9 +241,7 @@ export class Game {
       stalk: { remaining: Math.max(0, 2 - (s.used['stalk'] ?? 0)) },
       shoot: {
         remaining:
-          p.role === 'police'
-            ? this.policeBullets
-            : Math.max(0, 1 - (s.used['shoot'] ?? 0)),
+          p.role === 'police' ? this.policeBullets : Math.max(0, 1 - (s.used['shoot'] ?? 0)),
       },
       disable: {
         cooldownUntilRound: s.cooldownUntilRound['disable'] ?? 0,
@@ -593,7 +588,8 @@ export class Game {
         id: p.id,
         role: p.role!,
         alive: p.status === 'alive',
-        disabled: abilityState.disabledUntilRound > 0 && this.round <= abilityState.disabledUntilRound,
+        disabled:
+          abilityState.disabledUntilRound > 0 && this.round <= abilityState.disabledUntilRound,
       };
     });
 
@@ -603,7 +599,8 @@ export class Game {
     let detectiveTarget: PlayerId | null = null;
     let confuserTarget: PlayerId | null = null;
     let silencerTarget: PlayerId | null = null;
-    let habildarAction: { kind: 'shoot' | 'disable' | 'skip'; targetId: PlayerId | null } | null = null;
+    let habildarAction: { kind: 'shoot' | 'disable' | 'skip'; targetId: PlayerId | null } | null =
+      null;
     let stalkerTarget: PlayerId | null = null;
 
     for (const [id, action] of this.pendingActions.entries()) {
@@ -618,7 +615,8 @@ export class Game {
       if (action.kind === 'silence') silencerTarget = action.target;
       if (p.role === 'habildar') {
         if (action.kind === 'shoot') habildarAction = { kind: 'shoot', targetId: action.target };
-        else if (action.kind === 'disable') habildarAction = { kind: 'disable', targetId: action.target };
+        else if (action.kind === 'disable')
+          habildarAction = { kind: 'disable', targetId: action.target };
         else habildarAction = { kind: 'skip', targetId: null };
       }
       if (action.kind === 'stalk') stalkerTarget = action.target;

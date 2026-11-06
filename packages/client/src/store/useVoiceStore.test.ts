@@ -47,4 +47,3 @@ describe('Voice Store & Mic State (Section 2.1)', () => {
     expect(useVoiceStore.getState().micEnabled).toBe(false);
   });
 });
-

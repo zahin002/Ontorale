@@ -15,4 +15,3 @@ export const useVoiceStore = create<VoiceStore>((set) => ({
   setMicEnabled: (enabled: boolean) => set({ micEnabled: enabled }),
   setPermissionDenied: (denied: boolean) => set({ permissionDenied: denied }),
 }));
-

@@ -39,9 +39,7 @@ export const Game: React.FC<GameProps> = ({ state }) => {
           {/* Role Banner & Mafia Teammates */}
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-3.5">
-              {me.role ? (
-                <RoleAvatar role={me.role as Role} size="lg" />
-              ) : null}
+              {me.role ? <RoleAvatar role={me.role as Role} size="lg" /> : null}
 
               <div>
                 <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">
@@ -82,7 +80,9 @@ export const Game: React.FC<GameProps> = ({ state }) => {
                         className="text-xs bg-red-950/80 border border-red-800/80 text-red-200 px-2.5 py-1 rounded-md flex items-center gap-1.5"
                       >
                         <RoleAvatar role={mate.role as Role} size="sm" />
-                        <span>{mateName} ({t(`role.${mate.role}`)})</span>
+                        <span>
+                          {mateName} ({t(`role.${mate.role}`)})
+                        </span>
                       </span>
                     );
                   })}

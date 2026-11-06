@@ -42,14 +42,7 @@ export interface RoomSettings {
 }
 
 export type ActionKind =
-  | 'kill'
-  | 'protect'
-  | 'shoot'
-  | 'investigate'
-  | 'confuse'
-  | 'silence'
-  | 'disable'
-  | 'stalk';
+  'kill' | 'protect' | 'shoot' | 'investigate' | 'confuse' | 'silence' | 'disable' | 'stalk';
 
 export type Cause = 'mafia' | 'police' | 'habildar';
 

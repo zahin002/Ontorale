@@ -394,12 +394,7 @@ describe('resolveNight - NIGHT-01 suite', () => {
       expect(outcome.habildarBulletsSpent).toBe(1);
 
       // Doctor saves from Habildar shot
-      const savedOutcome = resolveNight(
-        players,
-        { ...actions, doctorProtect: 'c' },
-        0,
-        1,
-      );
+      const savedOutcome = resolveNight(players, { ...actions, doctorProtect: 'c' }, 0, 1);
       expect(savedOutcome.deaths).toEqual([]);
       expect(savedOutcome.saves).toEqual([{ id: 'c', from: 'police' }]);
       expect(savedOutcome.habildarBulletsSpent).toBe(1);
@@ -428,13 +423,35 @@ describe('resolveNight - NIGHT-01 suite', () => {
 
     it('Disabled mafia roles (silencer, confuser, stalker) do not execute their actions; killer kill cannot be disabled', () => {
       const disabledKiller: NightPlayer = { id: 'k', role: 'killer', alive: true, disabled: true };
-      const disabledSilencer: NightPlayer = { id: 's', role: 'silencer', alive: true, disabled: true };
-      const disabledConfuser: NightPlayer = { id: 'cf', role: 'confuser', alive: true, disabled: true };
-      const disabledStalker: NightPlayer = { id: 'st', role: 'stalker', alive: true, disabled: true };
+      const disabledSilencer: NightPlayer = {
+        id: 's',
+        role: 'silencer',
+        alive: true,
+        disabled: true,
+      };
+      const disabledConfuser: NightPlayer = {
+        id: 'cf',
+        role: 'confuser',
+        alive: true,
+        disabled: true,
+      };
+      const disabledStalker: NightPlayer = {
+        id: 'st',
+        role: 'stalker',
+        alive: true,
+        disabled: true,
+      };
       const det: NightPlayer = { id: 'd', role: 'detective', alive: true };
       const citizen: NightPlayer = { id: 'c', role: 'citizen', alive: true };
 
-      const players = [disabledKiller, disabledSilencer, disabledConfuser, disabledStalker, det, citizen];
+      const players = [
+        disabledKiller,
+        disabledSilencer,
+        disabledConfuser,
+        disabledStalker,
+        det,
+        citizen,
+      ];
       const actions: NightActions = {
         killerPicks: { k: 'c' },
         doctorProtect: null,
@@ -456,26 +473,21 @@ describe('resolveNight - NIGHT-01 suite', () => {
     it('Stalker reveals exact role id of Citizen target', () => {
       const players = [P('st', 'stalker'), P('doc', 'doctor'), P('k', 'killer')];
       // Stalk doctor
-      const outcomeDoc = resolveNight(
-        players,
-        { ...baseActions, stalkerTarget: 'doc' },
-        0,
-        0,
-      );
+      const outcomeDoc = resolveNight(players, { ...baseActions, stalkerTarget: 'doc' }, 0, 0);
       expect(outcomeDoc.stalkResult).toEqual({ target: 'doc', role: 'doctor' });
 
       // Stalking mafia is invalid
-      const outcomeMafia = resolveNight(
-        players,
-        { ...baseActions, stalkerTarget: 'k' },
-        0,
-        0,
-      );
+      const outcomeMafia = resolveNight(players, { ...baseActions, stalkerTarget: 'k' }, 0, 0);
       expect(outcomeMafia.stalkResult).toBeNull();
     });
 
     it('Silencer and Confuser can target teammates', () => {
-      const players = [P('s', 'silencer'), P('cf', 'confuser'), P('k', 'killer'), P('det', 'detective')];
+      const players = [
+        P('s', 'silencer'),
+        P('cf', 'confuser'),
+        P('k', 'killer'),
+        P('det', 'detective'),
+      ];
       // Silencer silences teammate killer, confuser frames teammate killer
       const outcome = resolveNight(
         players,
