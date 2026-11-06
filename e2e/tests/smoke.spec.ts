@@ -5,4 +5,3 @@ test.describe('smoke check', () => {
     expect(true).toBe(true);
   });
 });
-

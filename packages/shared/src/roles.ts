@@ -53,4 +53,3 @@ export function assignRoles(
   const shuffled = shuffle(list, rng);
   return Object.fromEntries(ids.map((id, i) => [id, shuffled[i]]));
 }
-

@@ -45,4 +45,3 @@ export const DEFAULT_ROOM_SETTINGS = {
   voteSec: 60 as const,
   optional: DEFAULT_OPTIONAL_ROLES,
 };
-

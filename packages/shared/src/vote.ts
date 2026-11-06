@@ -11,4 +11,3 @@ export function tally(aliveIds: PlayerId[], votes: Record<PlayerId, PlayerId | n
   const top = max > 0 ? Object.keys(counts).filter((id) => counts[id] === max) : [];
   return { counts, max, top }; // top.length: 0 none, 1 eliminate, >=2 tie
 }
-

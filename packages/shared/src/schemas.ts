@@ -76,4 +76,3 @@ export const VoiceTokenSchema = z.object({
 export const VoiceReadySchema = z.object({
   channel: z.enum(['public', 'mafia']),
 });
-
