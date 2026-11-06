@@ -430,14 +430,14 @@ export class Game {
 
     if (!allowedKind) return { error: 'notAllowed' };
 
+    if (role === 'police' && kind === 'shoot' && targetId !== null && this.policeBullets <= 0) {
+      return { error: 'noBullets' };
+    }
+
     // Target validation
     const allowed = this.getAllowedTargets(callerId);
     if (targetId !== null && !allowed.includes(targetId)) {
       return { error: 'invalidTarget' };
-    }
-
-    if (role === 'police' && kind === 'shoot' && targetId !== null && this.policeBullets <= 0) {
-      return { error: 'noBullets' };
     }
 
     // Changing actions allowed until timer end (D5)
