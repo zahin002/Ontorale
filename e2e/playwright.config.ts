@@ -1,4 +1,9 @@
 import { defineConfig, devices } from '@playwright/test';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export default defineConfig({
   testDir: './tests',
@@ -7,10 +12,22 @@ export default defineConfig({
   retries: process.env.CI ? 1 : 0,
   workers: 1,
   reporter: 'html',
+  timeout: 30000,
   use: {
     baseURL: 'http://localhost:3000',
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
+  },
+  webServer: {
+    command: 'node ../packages/server/dist/index.js',
+    url: 'http://localhost:3000/healthz',
+    reuseExistingServer: !process.env.CI,
+    cwd: __dirname,
+    env: {
+      NODE_ENV: 'test',
+      TIMER_SCALE: '0.02',
+      PORT: '3000',
+    },
   },
   projects: [
     {

@@ -1,7 +1,11 @@
 import express, { type Express } from 'express';
 import http from 'node:http';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { Server as SocketIOServer } from 'socket.io';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 import helmet from 'helmet';
 import pino from 'pino';
 import type { EnvConfig } from './config';
@@ -109,8 +113,8 @@ export function createServer(
 
   registerSocketHandlers(io, roomManager, config);
 
-  // Serve static files in production
-  if (config.NODE_ENV === 'production') {
+  // Serve static files in production or test mode
+  if (config.NODE_ENV === 'production' || config.NODE_ENV === 'test') {
     const clientDist = path.resolve(__dirname, '../../client/dist');
     app.use(express.static(clientDist));
     app.get('*', (_req, res) => {
