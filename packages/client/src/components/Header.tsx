@@ -36,6 +36,11 @@ export const Header: React.FC<HeaderProps> = ({
     <header className="bg-slate-900 border-b border-slate-800 p-4 sticky top-0 z-20 shadow-md">
       <div className="max-w-5xl mx-auto flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
+          <img
+            src="/ontorale-logo.png"
+            alt="Ontorale Logo"
+            className="w-8 h-8 sm:w-9 sm:h-9 object-contain drop-shadow"
+          />
           <h1 className="text-xl font-black text-rose-500 tracking-wide font-bengali">
             {t('game.title')}
           </h1>

@@ -28,11 +28,16 @@ export const Home: React.FC = () => {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
       <div className="max-w-md w-full bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-2xl backdrop-blur">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-black text-rose-500 tracking-wider font-bengali mb-2">
-            {t('game.title')}
-          </h1>
-          <p className="text-slate-400 text-sm">বন্ধুদের সাথে সোশ্যাল ডিডাকশন গেম</p>
+        <div className="text-center mb-8 flex flex-col items-center">
+          <img
+            src="/ontorale-logo.png"
+            alt="অন্তরালে - Ontorale"
+            className="w-48 sm:w-56 h-auto object-contain drop-shadow-[0_10px_25px_rgba(225,29,72,0.3)] hover:scale-105 transition-transform duration-300 mb-2"
+          />
+          <h1 className="sr-only">{t('game.title')}</h1>
+          <p className="text-slate-400 text-xs sm:text-sm font-medium">
+            বন্ধুদের সাথে সোশ্যাল ডিডাকশন গেম
+          </p>
         </div>
 
         {error && (
