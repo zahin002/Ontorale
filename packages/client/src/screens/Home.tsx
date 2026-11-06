@@ -32,12 +32,9 @@ export const Home: React.FC = () => {
           <img
             src="/ontorale-logo.png"
             alt="অন্তরালে - Ontorale"
-            className="w-48 sm:w-56 h-auto object-contain drop-shadow-[0_10px_25px_rgba(225,29,72,0.3)] hover:scale-105 transition-transform duration-300 mb-2"
+            className="w-48 sm:w-56 h-auto object-contain drop-shadow-[0_10px_25px_rgba(225,29,72,0.3)] hover:scale-105 transition-transform duration-300"
           />
           <h1 className="sr-only">{t('game.title')}</h1>
-          <p className="text-slate-400 text-xs sm:text-sm font-medium">
-            বন্ধুদের সাথে সোশ্যাল ডিডাকশন গেম
-          </p>
         </div>
 
         {!connected && (
