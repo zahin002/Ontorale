@@ -4,7 +4,7 @@ import { t } from '../i18n';
 import { Plus, LogIn, AlertCircle } from 'lucide-react';
 
 export const Home: React.FC = () => {
-  const { createRoom, joinRoom, error, clearError } = useGameStore();
+  const { createRoom, joinRoom, error, clearError, connected } = useGameStore();
   const [nickname, setNickname] = useState('');
   const [roomCode, setRoomCode] = useState('');
   const [loading, setLoading] = useState(false);
@@ -39,6 +39,13 @@ export const Home: React.FC = () => {
             বন্ধুদের সাথে সোশ্যাল ডিডাকশন গেম
           </p>
         </div>
+
+        {!connected && (
+          <div className="mb-4 p-2.5 rounded-xl bg-amber-950/40 border border-amber-800/60 text-amber-300 text-xs flex items-center justify-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+            <span>সার্ভারের সাথে সংযোগ স্থাপন করা হচ্ছে... (ব্যাকএন্ড সার্ভার চালু রাখুন)</span>
+          </div>
+        )}
 
         {error && (
           <div className="mb-6 p-3 rounded-xl bg-red-950/60 border border-red-800/80 text-red-200 text-xs flex items-center justify-between">
@@ -76,7 +83,16 @@ export const Home: React.FC = () => {
               disabled={!nickname.trim() || loading}
               className="w-full bg-rose-600 hover:bg-rose-500 disabled:opacity-50 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition flex items-center justify-center gap-2"
             >
-              <Plus className="w-5 h-5" /> {t('ui.createRoom')}
+              {loading ? (
+                <>
+                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span>রুম তৈরি হচ্ছে...</span>
+                </>
+              ) : (
+                <>
+                  <Plus className="w-5 h-5" /> {t('ui.createRoom')}
+                </>
+              )}
             </button>
 
             <div className="relative flex py-2 items-center">
@@ -108,7 +124,16 @@ export const Home: React.FC = () => {
                 disabled={!nickname.trim() || !roomCode.trim() || loading}
                 className="w-full bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-slate-200 font-bold py-3 px-4 rounded-xl border border-slate-700 transition flex items-center justify-center gap-2"
               >
-                <LogIn className="w-5 h-5" /> {t('ui.joinRoom')}
+                {loading ? (
+                  <>
+                    <span className="w-4 h-4 border-2 border-slate-200 border-t-transparent rounded-full animate-spin" />
+                    <span>যোগ দেওয়া হচ্ছে...</span>
+                  </>
+                ) : (
+                  <>
+                    <LogIn className="w-5 h-5" /> {t('ui.joinRoom')}
+                  </>
+                )}
               </button>
             </form>
           </div>

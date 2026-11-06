@@ -47,6 +47,35 @@ interface SocketAck<T = Record<string, unknown>> {
   error?: string;
 }
 
+export function formatErrorMessage(error?: string): string {
+  switch (error) {
+    case 'rateLimited':
+      return 'খুব দ্রুত রুম তৈরি বা অনুরোধ করা হচ্ছে। অনুগ্রহ করে এক মিনিট অপেক্ষা করুন।';
+    case 'roomNotFound':
+    case 'notFound':
+      return 'রুমটি পাওয়া যায়নি। রুম কোডটি সঠিকভাবে দিন।';
+    case 'gameAlreadyStarted':
+      return 'এই রুমে খেলা ইতোমধ্যে শুরু হয়ে গেছে। নতুন খেলোয়াড় যোগ দিতে পারবে না।';
+    case 'roomFull':
+      return 'রুমটি সম্পূর্ণ ভর্তি (সর্বোচ্চ ১২ জন)।';
+    case 'nicknameTaken':
+      return 'এই নামটি এই রুমে ইতোমধ্যে ব্যবহৃত হয়েছে। অন্য ডাকনাম দিন।';
+    case 'maxRoomsReached':
+      return 'সার্ভারে সর্বোচ্চ রুমের সীমা পূর্ণ হয়ে গেছে। কিছুক্ষণ পর চেষ্টা করুন।';
+    case 'badRequest':
+      return 'অনুরোধটি সঠিক নয়। অনুগ্রহ করে আবার চেষ্টা করুন।';
+    case 'notAllowed':
+      return 'এই কাজটি করার অনুমতি নেই।';
+    case 'voiceUnavailable':
+      return 'ভয়েস সার্ভিস সংযোগ করা সম্ভব হচ্ছে না।';
+    case 'timeout':
+    case 'disconnected':
+      return 'সার্ভারের সাথে সংযোগ পাওয়া যায়নি। ব্যাকএন্ড সার্ভার চালু আছে কিনা নিশ্চিত করুন।';
+    default:
+      return error || 'একটি সমস্যা দেখা দিয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।';
+  }
+}
+
 export const useGameStore = create<GameStore>((set, get) => ({
   socket: null,
   connected: false,
@@ -96,10 +125,23 @@ export const useGameStore = create<GameStore>((set, get) => ({
   createRoom: async (nickname, settings) => {
     const s = get().initSocket();
     return new Promise((resolve) => {
+      let resolved = false;
+      const timer = setTimeout(() => {
+        if (!resolved) {
+          resolved = true;
+          const msg = formatErrorMessage('timeout');
+          set({ error: msg });
+          resolve({ ok: false, error: msg });
+        }
+      }, 7000);
+
       s.emit(
         'room:create',
         { nickname, settings },
         (res: SocketAck<{ roomCode: string; playerId: string; sessionToken: string }>) => {
+          if (resolved) return;
+          clearTimeout(timer);
+          resolved = true;
           if (res.ok && res.data) {
             sessionStorage.setItem('ontorale_session_token', res.data.sessionToken);
             sessionStorage.setItem('ontorale_room_code', res.data.roomCode);
@@ -112,8 +154,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
             });
             resolve({ ok: true });
           } else {
-            set({ error: res.error || 'Failed to create room' });
-            resolve({ ok: false, error: res.error });
+            const friendly = formatErrorMessage(res.error);
+            set({ error: friendly });
+            resolve({ ok: false, error: friendly });
           }
         },
       );
@@ -123,10 +166,23 @@ export const useGameStore = create<GameStore>((set, get) => ({
   joinRoom: async (roomCode, nickname) => {
     const s = get().initSocket();
     return new Promise((resolve) => {
+      let resolved = false;
+      const timer = setTimeout(() => {
+        if (!resolved) {
+          resolved = true;
+          const msg = formatErrorMessage('timeout');
+          set({ error: msg });
+          resolve({ ok: false, error: msg });
+        }
+      }, 7000);
+
       s.emit(
         'room:join',
         { roomCode, nickname },
         (res: SocketAck<{ playerId: string; sessionToken: string }>) => {
+          if (resolved) return;
+          clearTimeout(timer);
+          resolved = true;
           if (res.ok && res.data) {
             sessionStorage.setItem('ontorale_session_token', res.data.sessionToken);
             sessionStorage.setItem('ontorale_room_code', roomCode);
@@ -139,8 +195,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
             });
             resolve({ ok: true });
           } else {
-            set({ error: res.error || 'Failed to join room' });
-            resolve({ ok: false, error: res.error });
+            const friendly = formatErrorMessage(res.error);
+            set({ error: friendly });
+            resolve({ ok: false, error: friendly });
           }
         },
       );

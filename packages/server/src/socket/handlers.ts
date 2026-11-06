@@ -54,7 +54,7 @@ export function registerSocketHandlers(
       if (typeof ack !== 'function') return;
 
       const ip = getClientIp();
-      if (config.NODE_ENV !== 'test' && !ipRoomCreateLimiter.check(ip)) {
+      if (config.NODE_ENV === 'production' && !ipRoomCreateLimiter.check(ip)) {
         return ack({ ok: false, error: 'rateLimited' });
       }
 
