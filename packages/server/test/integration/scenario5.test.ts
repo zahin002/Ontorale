@@ -25,7 +25,15 @@ function createClient(port: number): Promise<ClientSocket> {
   });
 }
 
-function emitWithAck<T = Record<string, unknown>>(
+/* eslint-disable @typescript-eslint/no-explicit-any */
+interface AckResponse {
+  ok: boolean;
+  data?: any;
+  error?: string;
+  [key: string]: any;
+}
+
+function emitWithAck<T = AckResponse>(
   socket: ClientSocket,
   event: string,
   payload?: unknown,
