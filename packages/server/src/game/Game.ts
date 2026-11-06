@@ -9,7 +9,10 @@ import {
   type WinMode,
   assignRoles,
   buildRoleList,
-  checkWin,
+  evaluateOutcome,
+  isMafiaRole,
+  getAbilityForRoleAndAction,
+  type AbilityState,
   createDeathEvent,
   createDisconnectedEvent,
   createGameOverEvent,
@@ -73,6 +76,11 @@ export class Game {
     PlayerId,
     { round: number; target: PlayerId; result: 'mafia' | 'notMafia' }[]
   >();
+  private stalkerResults = new Map<
+    PlayerId,
+    { round: number; target: PlayerId; role: Role }[]
+  >();
+  private playerAbilityStates = new Map<PlayerId, AbilityState>();
 
   public publishedVoteResult: {
     counts: Record<PlayerId, number>;
@@ -106,7 +114,7 @@ export class Game {
     this.rng = options.rng ?? new CryptoRng();
     this.voiceProvider = options.voiceProvider ?? new FakeVoiceProvider();
     this.timerScale = options.timerScale ?? 1;
-    this.winMode = options.winMode ?? 'plusOne';
+    this.winMode = options.winMode ?? 'parity';
     this.onStateChange = options.onStateChange;
     this.lastActivityAt = this.clock.now();
   }
@@ -209,6 +217,48 @@ export class Game {
     return Array.from(this.players.values()).filter((p) => p.connected).length;
   }
 
+  public getAbilityState(playerId: PlayerId): AbilityState {
+    let s = this.playerAbilityStates.get(playerId);
+    if (!s) {
+      s = { used: {}, cooldownUntilRound: {}, disabledUntilRound: 0 };
+      this.playerAbilityStates.set(playerId, s);
+    }
+    return s;
+  }
+
+  public getHabildarBullets(playerId: PlayerId): number {
+    const s = this.getAbilityState(playerId);
+    return Math.max(0, 1 - (s.used['shoot'] ?? 0));
+  }
+
+  public getStalkerResults(playerId: PlayerId): { round: number; target: PlayerId; role: Role }[] {
+    return this.stalkerResults.get(playerId) ?? [];
+  }
+
+  public getPlayerAbilityStatus(playerId: PlayerId) {
+    const p = this.players.get(playerId);
+    if (!p) return undefined;
+    const s = this.getAbilityState(playerId);
+    return {
+      investigate: { remaining: Math.max(0, 2 - (s.used['investigate'] ?? 0)) },
+      stalk: { remaining: Math.max(0, 2 - (s.used['stalk'] ?? 0)) },
+      shoot: {
+        remaining:
+          p.role === 'police'
+            ? this.policeBullets
+            : Math.max(0, 1 - (s.used['shoot'] ?? 0)),
+      },
+      disable: {
+        cooldownUntilRound: s.cooldownUntilRound['disable'] ?? 0,
+        canUse: this.round >= (s.cooldownUntilRound['disable'] ?? 0),
+      },
+      disabled: {
+        untilRound: s.disabledUntilRound,
+        active: s.disabledUntilRound > 0 && this.round <= s.disabledUntilRound,
+      },
+    };
+  }
+
   // -------------------------------------------------------------
   // Settings & Host Controls
   // -------------------------------------------------------------
@@ -289,6 +339,15 @@ export class Game {
     this.log = [];
     this.publishedVoteResult = null;
     this.tiedCandidates = null;
+    this.playerAbilityStates.clear();
+    this.stalkerResults.clear();
+    for (const id of playerIds) {
+      this.playerAbilityStates.set(id, {
+        used: {},
+        cooldownUntilRound: {},
+        disabledUntilRound: 0,
+      });
+    }
 
     this.enterPhase('night');
     return { ok: true };
@@ -418,26 +477,73 @@ export class Game {
     const player = this.players.get(callerId);
     if (!player || player.status !== 'alive') return { error: 'notAllowed' };
 
-    // Validate role owns the action kind
     const role = player.role;
-    const allowedKind =
-      (role === 'killer' && kind === 'kill') ||
-      (role === 'doctor' && kind === 'protect') ||
-      (role === 'police' && kind === 'shoot') ||
-      (role === 'detective' && kind === 'investigate') ||
-      (role === 'confuser' && kind === 'confuse') ||
-      (role === 'silencer' && kind === 'silence');
+    if (!role) return { error: 'notAllowed' };
 
-    if (!allowedKind) return { error: 'notAllowed' };
+    const ability = getAbilityForRoleAndAction(role, kind);
+    if (!ability) return { error: 'notAllowed' };
+
+    const abilityState = this.getAbilityState(callerId);
+
+    // Lifetime limit check
+    if (ability.lifetimeLimit && (abilityState.used[ability.id] ?? 0) >= ability.lifetimeLimit) {
+      return { error: 'limitReached' };
+    }
+
+    // Cooldown check
+    if (ability.cooldownRounds && this.round < (abilityState.cooldownUntilRound[ability.id] ?? 0)) {
+      return { error: 'abilityUnavailable' };
+    }
+
+    // Disable check
+    if (
+      ability.disableable &&
+      abilityState.disabledUntilRound > 0 &&
+      this.round <= abilityState.disabledUntilRound
+    ) {
+      return { error: 'abilityUnavailable' };
+    }
 
     if (role === 'police' && kind === 'shoot' && targetId !== null && this.policeBullets <= 0) {
       return { error: 'noBullets' };
     }
 
+    if (
+      role === 'habildar' &&
+      kind === 'shoot' &&
+      targetId !== null &&
+      this.getHabildarBullets(callerId) <= 0
+    ) {
+      return { error: 'limitReached' };
+    }
+
     // Target validation
-    const allowed = this.getAllowedTargets(callerId);
-    if (targetId !== null && !allowed.includes(targetId)) {
-      return { error: 'invalidTarget' };
+    if (targetId !== null) {
+      const target = this.players.get(targetId);
+      if (!target || target.status !== 'alive') {
+        return { error: 'invalidTarget' };
+      }
+
+      if (role === 'habildar' && kind === 'disable') {
+        if (!target.role || !isMafiaRole(target.role)) {
+          return { error: 'invalidTarget' };
+        }
+      } else if (role === 'stalker' && kind === 'stalk') {
+        if (!target.role || isMafiaRole(target.role) || targetId === callerId) {
+          return { error: 'invalidTarget' };
+        }
+      } else if (role === 'doctor' || role === 'confuser') {
+        // self is allowed
+      } else {
+        if (targetId === callerId) {
+          return { error: 'invalidTarget' };
+        }
+      }
+    } else {
+      const allowNone = role === 'killer' || role === 'police' || role === 'habildar';
+      if (!allowNone) {
+        return { error: 'invalidTarget' };
+      }
     }
 
     // Changing actions allowed until timer end (D5)
@@ -481,11 +587,15 @@ export class Game {
   }
 
   private resolveNightPhase(): void {
-    const nightPlayers = Array.from(this.players.values()).map((p) => ({
-      id: p.id,
-      role: p.role!,
-      alive: p.status === 'alive',
-    }));
+    const nightPlayers = Array.from(this.players.values()).map((p) => {
+      const abilityState = this.getAbilityState(p.id);
+      return {
+        id: p.id,
+        role: p.role!,
+        alive: p.status === 'alive',
+        disabled: abilityState.disabledUntilRound > 0 && this.round <= abilityState.disabledUntilRound,
+      };
+    });
 
     const killerPicks: Record<PlayerId, PlayerId | null> = {};
     let doctorProtect: PlayerId | null = null;
@@ -493,6 +603,8 @@ export class Game {
     let detectiveTarget: PlayerId | null = null;
     let confuserTarget: PlayerId | null = null;
     let silencerTarget: PlayerId | null = null;
+    let habildarAction: { kind: 'shoot' | 'disable' | 'skip'; targetId: PlayerId | null } | null = null;
+    let stalkerTarget: PlayerId | null = null;
 
     for (const [id, action] of this.pendingActions.entries()) {
       const p = this.players.get(id);
@@ -500,11 +612,20 @@ export class Game {
 
       if (action.kind === 'kill') killerPicks[id] = action.target;
       if (action.kind === 'protect') doctorProtect = action.target;
-      if (action.kind === 'shoot') policeShot = action.target;
+      if (action.kind === 'shoot' && p.role === 'police') policeShot = action.target;
       if (action.kind === 'investigate') detectiveTarget = action.target;
       if (action.kind === 'confuse') confuserTarget = action.target;
       if (action.kind === 'silence') silencerTarget = action.target;
+      if (p.role === 'habildar') {
+        if (action.kind === 'shoot') habildarAction = { kind: 'shoot', targetId: action.target };
+        else if (action.kind === 'disable') habildarAction = { kind: 'disable', targetId: action.target };
+        else habildarAction = { kind: 'skip', targetId: null };
+      }
+      if (action.kind === 'stalk') stalkerTarget = action.target;
     }
+
+    const habildarPlayer = Array.from(this.players.values()).find((p) => p.role === 'habildar');
+    const habildarBullets = habildarPlayer ? this.getHabildarBullets(habildarPlayer.id) : 0;
 
     const outcome = resolveNight(
       nightPlayers,
@@ -515,19 +636,38 @@ export class Game {
         detectiveTarget,
         confuserTarget,
         silencerTarget,
+        habildarAction,
+        stalkerTarget,
       },
       this.policeBullets,
+      habildarBullets,
     );
 
-    // Spend bullets
+    // Spend police bullets
     if (outcome.bulletsSpent > 0) {
       this.policeBullets -= outcome.bulletsSpent;
     }
 
-    // Record detective investigation privately
+    // Spend habildar bullets
+    if (outcome.habildarBulletsSpent && habildarPlayer) {
+      const hs = this.getAbilityState(habildarPlayer.id);
+      hs.used['shoot'] = (hs.used['shoot'] ?? 0) + 1;
+    }
+
+    // Habildar disable target
+    if (outcome.disabledTarget && habildarPlayer) {
+      const hs = this.getAbilityState(habildarPlayer.id);
+      hs.cooldownUntilRound['disable'] = this.round + 2;
+      const targetState = this.getAbilityState(outcome.disabledTarget);
+      targetState.disabledUntilRound = this.round + 2;
+    }
+
+    // Record detective investigation privately and count use
     if (outcome.investigation) {
       const det = Array.from(this.players.values()).find((p) => p.role === 'detective');
       if (det) {
+        const ds = this.getAbilityState(det.id);
+        ds.used['investigate'] = (ds.used['investigate'] ?? 0) + 1;
         const invs = this.detectiveInvestigations.get(det.id) || [];
         invs.push({
           round: this.round,
@@ -538,12 +678,28 @@ export class Game {
       }
     }
 
-    // Apply deaths
+    // Record stalker result privately and count use
+    if (outcome.stalkResult) {
+      const stalker = Array.from(this.players.values()).find((p) => p.role === 'stalker');
+      if (stalker) {
+        const ss = this.getAbilityState(stalker.id);
+        ss.used['stalk'] = (ss.used['stalk'] ?? 0) + 1;
+        const resList = this.stalkerResults.get(stalker.id) || [];
+        resList.push({
+          round: this.round,
+          target: outcome.stalkResult.target,
+          role: outcome.stalkResult.role,
+        });
+        this.stalkerResults.set(stalker.id, resList);
+      }
+    }
+
+    // Apply deaths together (Section 3 point 3)
     for (const d of outcome.deaths) {
       const deadPlayer = this.players.get(d.id);
       if (deadPlayer) {
         deadPlayer.status = 'dead';
-        deadPlayer.revealedRole = deadPlayer.role; // Role reveal on death always on (§24)
+        deadPlayer.revealedRole = deadPlayer.role;
         this.log.push({
           round: this.round,
           phase: 'night',
@@ -561,7 +717,7 @@ export class Game {
       });
     }
 
-    // Apply silence (reset previous silences, then set new silence)
+    // Apply silence
     for (const p of this.players.values()) {
       p.silenced = false;
     }
@@ -577,7 +733,7 @@ export class Game {
       }
     }
 
-    // If no deaths occurred: publish noDeaths event (D25)
+    // If no deaths occurred: publish noDeaths event
     if (outcome.deaths.length === 0) {
       this.log.push({
         round: this.round,
@@ -589,13 +745,10 @@ export class Game {
     // Clear pending actions
     this.pendingActions.clear();
 
-    // Check win condition
-    const win = this.evaluateWinCondition();
-    if (win) {
-      this.endGame(win);
-    } else {
-      this.enterPhase('nightResult');
-    }
+    // Section 3: After all simultaneous deaths are applied, evaluate win condition
+    if (this.afterMutation()) return;
+
+    this.enterPhase('nightResult');
   }
 
   private resolveVotingPhase(): void {
@@ -626,6 +779,8 @@ export class Game {
           event: createVoteOutEvent(eliminatedId, target.role!, 'vote'),
         });
       }
+      this.pendingVotes.clear();
+      if (this.afterMutation()) return;
       this.enterPhase('voteResult');
     } else if (top.length >= 2) {
       // Tie
@@ -648,6 +803,7 @@ export class Game {
         });
         this.enterPhase('voteResult');
       }
+      this.pendingVotes.clear();
     } else {
       // top.length === 0 (everyone abstained)
       this.log.push({
@@ -655,10 +811,9 @@ export class Game {
         phase: 'voting',
         event: createNoEliminationEvent(),
       });
+      this.pendingVotes.clear();
       this.enterPhase('voteResult');
     }
-
-    this.pendingVotes.clear();
   }
 
   private resolveMayorTiebreak(chosenTargetId: PlayerId | null): void {
@@ -682,17 +837,15 @@ export class Game {
     }
 
     this.tiedCandidates = null;
+    if (this.afterMutation()) return;
     this.enterPhase('voteResult');
   }
 
   private checkWinAfterVoteResult(): void {
-    const win = this.evaluateWinCondition();
-    if (win) {
-      this.endGame(win);
-    } else {
-      this.round++;
-      this.enterPhase('night');
-    }
+    if (this.phase === 'gameOver') return;
+    if (this.afterMutation()) return;
+    this.round++;
+    this.enterPhase('night');
   }
 
   public handleMidGameDisconnect(playerId: PlayerId): void {
@@ -720,34 +873,42 @@ export class Game {
     }
 
     // Win condition is re-checked at once
-    const win = this.evaluateWinCondition();
-    if (win) {
-      this.endGame(win);
-    } else {
-      this.touch();
+    if (this.afterMutation()) return;
+    this.touch();
+  }
+
+  public afterMutation(): boolean {
+    if (this.phase === 'lobby' || this.phase === 'gameOver') return false;
+
+    const winner = evaluateOutcome({ players: this.players.values(), winMode: this.winMode });
+    if (winner) {
+      this.endGame(winner);
+      return true;
     }
+    return false;
   }
 
   private evaluateWinCondition(): Team | null {
     if (this.phase === 'lobby') return null;
-
-    const alive = this.getAlivePlayers();
-    const aliveMafia = alive.filter(
-      (p) => p.role === 'killer' || p.role === 'silencer' || p.role === 'confuser',
-    ).length;
-    const aliveNonMafia = alive.length - aliveMafia;
-
-    return checkWin(aliveMafia, aliveNonMafia, this.winMode);
+    return evaluateOutcome({ players: this.players.values(), winMode: this.winMode });
   }
 
   private endGame(winner: Team): void {
+    if (this.phase === 'gameOver') return;
     this.winner = winner;
+    if (this.timerHandle) {
+      this.clock.clearTimeout(this.timerHandle);
+      this.timerHandle = undefined;
+    }
+    this.phaseEndsAt = null;
     this.log.push({
       round: this.round,
       phase: this.phase,
       event: createGameOverEvent(winner),
     });
     this.enterPhase('gameOver');
+    this.touch();
+    this.syncVoicePermissions().catch(() => {});
   }
 
   // -------------------------------------------------------------
@@ -763,18 +924,36 @@ export class Game {
       .map((p) => p.id);
 
     if (this.phase === 'night') {
+      const abilityState = this.getAbilityState(playerId);
+      const isActorDisabled =
+        abilityState.disabledUntilRound > 0 && this.round <= abilityState.disabledUntilRound;
+
       switch (player.role) {
         case 'killer':
-        case 'police':
-          if (player.role === 'police' && this.policeBullets <= 0) return [];
           return aliveOthers;
         case 'doctor':
           return this.getAlivePlayers().map((p) => p.id); // self allowed
-        case 'confuser':
-          return this.getAlivePlayers().map((p) => p.id); // self allowed
-        case 'detective':
-        case 'silencer':
+        case 'police':
+          if (this.policeBullets <= 0) return [];
           return aliveOthers;
+        case 'detective':
+          if ((abilityState.used['investigate'] ?? 0) >= 2) return [];
+          if (isActorDisabled) return [];
+          return aliveOthers;
+        case 'confuser':
+          if (isActorDisabled) return [];
+          return this.getAlivePlayers().map((p) => p.id); // self allowed
+        case 'silencer':
+          if (isActorDisabled) return [];
+          return aliveOthers;
+        case 'habildar':
+          return aliveOthers;
+        case 'stalker':
+          if ((abilityState.used['stalk'] ?? 0) >= 2) return [];
+          if (isActorDisabled) return [];
+          return this.getAlivePlayers()
+            .filter((p) => p.id !== playerId && p.role && !isMafiaRole(p.role))
+            .map((p) => p.id);
         default:
           return [];
       }
@@ -812,7 +991,7 @@ export class Game {
 
       const aliveMafiaIds = new Set(
         this.getAlivePlayers()
-          .filter((p) => p.role === 'killer' || p.role === 'silencer' || p.role === 'confuser')
+          .filter((p) => p.role && isMafiaRole(p.role))
           .map((p) => p.id),
       );
 

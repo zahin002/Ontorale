@@ -38,7 +38,11 @@ export const DEFAULT_OPTIONAL_ROLES = {
   mayor: true,
   silencer: false,
   confuser: false,
+  habildar: false,
+  stalker: false,
 };
+
+export const DEFAULT_WIN_MODE = 'parity';
 
 export const DEFAULT_ROOM_SETTINGS = {
   discussionSec: 180 as const,

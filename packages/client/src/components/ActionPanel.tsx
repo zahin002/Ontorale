@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { ActionKind, ClientState, PublicPlayer } from '@ontorale/shared';
 import { t } from '../i18n';
 import { useGameStore } from '../store/useGameStore';
-import { Target, Ban, CheckCircle2 } from 'lucide-react';
+import { Target, Ban, CheckCircle2, Crosshair, ShieldOff } from 'lucide-react';
 
 interface ActionPanelProps {
   state: ClientState;
@@ -11,6 +11,8 @@ interface ActionPanelProps {
 export const ActionPanel: React.FC<ActionPanelProps> = ({ state }) => {
   const { submitAction, castVote, mayorDecide } = useGameStore();
   const { me, phase, players } = state;
+
+  const [habildarMode, setHabildarMode] = useState<'shoot' | 'disable' | 'skip'>('shoot');
 
   const playerMap = new Map<string, PublicPlayer>(players.map((p) => [p.id, p]));
 
@@ -26,9 +28,130 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({ state }) => {
   if (phase === 'night') {
     if (!me.role) return null;
 
+    const isDisabled = me.abilityStatus?.disabled?.active ?? false;
+
+    // Disabled Mafia player UI (Section 5)
+    if (isDisabled) {
+      return (
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col gap-2 shadow-lg">
+          <div className="flex items-center gap-2 text-rose-400 font-semibold text-sm">
+            <ShieldOff className="w-4 h-4" />
+            <span>{t('ability.disabled')}</span>
+          </div>
+          <div className="text-xs text-slate-400">
+            হাবিলদারের কার্যকলাপে আপনার ক্ষমতা এই রাতে অকার্যকর রয়েছে। তবে আপনি মাফিয়া চ্যাট এবং ভয়েস ব্যবহার করতে পারবেন।
+          </div>
+        </div>
+      );
+    }
+
+    // Habildar special panel (Section 5)
+    if (me.role === 'habildar') {
+      const bullets = me.abilityStatus?.shoot?.remaining ?? 1;
+      const canDisable = me.abilityStatus?.disable?.canUse ?? true;
+      const currentTarget = me.pendingAction?.target;
+
+      return (
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col gap-3 shadow-lg">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3">
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setHabildarMode('shoot')}
+                disabled={bullets <= 0}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 border transition ${
+                  habildarMode === 'shoot'
+                    ? 'bg-rose-600 border-rose-500 text-white'
+                    : 'bg-slate-800 border-slate-700 text-slate-300 disabled:opacity-40'
+                }`}
+              >
+                <Crosshair className="w-3.5 h-3.5" />
+                {t('ability.shoot')} ({bullets}/১)
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setHabildarMode('disable')}
+                disabled={!canDisable}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 border transition ${
+                  habildarMode === 'disable'
+                    ? 'bg-cyan-600 border-cyan-500 text-white'
+                    : 'bg-slate-800 border-slate-700 text-slate-300 disabled:opacity-40'
+                }`}
+              >
+                <ShieldOff className="w-3.5 h-3.5" />
+                {t('ability.disable')}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setHabildarMode('skip');
+                  submitAction('shoot', null);
+                }}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 border transition ${
+                  habildarMode === 'skip'
+                    ? 'bg-amber-600 border-amber-500 text-white'
+                    : 'bg-slate-800 border-slate-700 text-slate-300'
+                }`}
+              >
+                <Ban className="w-3.5 h-3.5" />
+                {t('ability.skip')}
+              </button>
+            </div>
+
+            <span className="text-xs text-slate-400 italic font-bengali">
+              {t('ui.changeUntilEnd')}
+            </span>
+          </div>
+
+          {habildarMode === 'skip' ? (
+            <div className="text-xs text-slate-400 py-2">
+              আজ রাতে আপনি কোনো পদক্ষেপ নেবেন না।
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+              {me.allowedTargets.map((targetId) => {
+                const targetPlayer = playerMap.get(targetId);
+                const isSelected = currentTarget === targetId;
+
+                return (
+                  <button
+                    key={targetId}
+                    data-testid={`target-${targetId}`}
+                    onClick={() => submitAction(habildarMode, targetId)}
+                    className={`p-2.5 rounded-lg border text-sm font-medium truncate transition ${
+                      isSelected
+                        ? habildarMode === 'shoot'
+                          ? 'bg-rose-600 text-white border-rose-400 shadow-md font-bold'
+                          : 'bg-cyan-600 text-white border-cyan-400 shadow-md font-bold'
+                        : 'bg-slate-800/90 hover:bg-slate-700 text-slate-200 border-slate-700'
+                    }`}
+                    title={targetPlayer?.nickname}
+                  >
+                    {targetPlayer?.nickname}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {me.pendingAction && (
+            <div className="text-xs text-cyan-400 flex items-center gap-1.5 mt-1 font-medium">
+              <CheckCircle2 className="w-4 h-4" /> আপনার বর্তমান পছন্দ:{' '}
+              <span className="text-white font-bold">
+                {currentTarget ? playerMap.get(currentTarget)?.nickname : t('ability.skip')}
+              </span>
+            </div>
+          )}
+        </div>
+      );
+    }
+
     let actionKind: ActionKind | null = null;
     let title = '';
     let allowNone = false;
+    let isExhausted = false;
 
     switch (me.role) {
       case 'killer':
@@ -42,13 +165,24 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({ state }) => {
         break;
       case 'police':
         actionKind = 'shoot';
-        title = `কাকে গুলি করতে চান নির্বাচন করুন (${me.bullets ?? 0} গুলি বাকি):`;
+        title = `কাকে গুলি করতে চান নির্বাচন করুন (${me.abilityStatus?.shoot?.remaining ?? me.bullets ?? 0} গুলি বাকি):`;
         allowNone = true;
+        isExhausted = (me.abilityStatus?.shoot?.remaining ?? me.bullets ?? 0) <= 0;
         break;
-      case 'detective':
+      case 'detective': {
         actionKind = 'investigate';
-        title = 'কাকে তদন্ত করতে চান নির্বাচন করুন:';
+        const remaining = me.abilityStatus?.investigate?.remaining ?? 2;
+        title = t('detective.remaining', { n: remaining });
+        isExhausted = remaining <= 0;
         break;
+      }
+      case 'stalker': {
+        actionKind = 'stalk';
+        const remaining = me.abilityStatus?.stalk?.remaining ?? 2;
+        title = t('stalker.remaining', { n: remaining });
+        isExhausted = remaining <= 0;
+        break;
+      }
       case 'confuser':
         actionKind = 'confuse';
         title = 'কাকে বিভ্রান্ত করতে চান নির্বাচন করুন:';
@@ -64,6 +198,14 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({ state }) => {
             রাতে আপনার কোনো গোপন দায়িত্ব নেই। রাত শেষ হওয়া পর্যন্ত অপেক্ষা করুন।
           </div>
         );
+    }
+
+    if (isExhausted) {
+      return (
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 text-center text-slate-400 text-sm">
+          {title} — আপনার সব সুযোগ শেষ হয়ে গেছে।
+        </div>
+      );
     }
 
     const currentTarget = me.pendingAction?.target;

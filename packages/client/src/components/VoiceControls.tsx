@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Room, RoomEvent } from 'livekit-client';
 import { useGameStore } from '../store/useGameStore';
+import { useVoiceStore } from '../store/useVoiceStore';
 import { Mic, MicOff } from 'lucide-react';
 import type { Phase } from '@ontorale/shared';
 
@@ -20,17 +21,20 @@ export const VoiceControls: React.FC<VoiceControlsProps> = ({
   silenced,
 }) => {
   const { socket } = useGameStore();
+  const { micEnabled, permissionDenied, toggleMic, setPermissionDenied } = useVoiceStore();
+
   const [pubRoom, setPubRoom] = useState<Room | null>(null);
   const [mafRoom, setMafRoom] = useState<Room | null>(null);
-  const [isMuted, setIsMuted] = useState(true);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [voiceAvailable, setVoiceAvailable] = useState<boolean>(true);
-  const [permissionDenied, setPermissionDenied] = useState(false);
+
+  const lastClickRef = useRef<number>(0);
 
   // Determine which room can publish to based on Section 11 matrix
   const canPublishInPub =
     alive && !silenced && (phase === 'lobby' || phase === 'discussion' || phase === 'gameOver');
   const canPublishInMaf = alive && isMafia && phase === 'night';
+  const canSpeakNow = canPublishInPub || canPublishInMaf;
 
   useEffect(() => {
     if (!socket || !roomCode) return;
@@ -113,53 +117,74 @@ export const VoiceControls: React.FC<VoiceControlsProps> = ({
     };
   }, [socket, roomCode, isMafia, alive]);
 
-  // Handle mute / unmute publishing per phase matrix
+  // Handle publishing based on stored micEnabled and current server permissions
   useEffect(() => {
     async function updateMicPublish() {
-      if (!isMuted && !permissionDenied) {
-        if (canPublishInPub && pubRoom) {
-          try {
-            await pubRoom.localParticipant.setMicrophoneEnabled(true);
-          } catch {
-            setPermissionDenied(true);
-          }
-        } else if (pubRoom) {
-          await pubRoom.localParticipant.setMicrophoneEnabled(false);
-        }
+      const shouldPublish = micEnabled && !permissionDenied && canSpeakNow;
 
-        if (canPublishInMaf && mafRoom) {
-          try {
-            await mafRoom.localParticipant.setMicrophoneEnabled(true);
-          } catch {
+      if (pubRoom) {
+        try {
+          const shouldPubRoom = shouldPublish && canPublishInPub;
+          await pubRoom.localParticipant.setMicrophoneEnabled(shouldPubRoom);
+        } catch (err) {
+          if (
+            err instanceof Error &&
+            (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError')
+          ) {
             setPermissionDenied(true);
           }
-        } else if (mafRoom) {
-          await mafRoom.localParticipant.setMicrophoneEnabled(false);
         }
-      } else {
-        if (pubRoom) await pubRoom.localParticipant.setMicrophoneEnabled(false);
-        if (mafRoom) await mafRoom.localParticipant.setMicrophoneEnabled(false);
+      }
+
+      if (mafRoom) {
+        try {
+          const shouldMafRoom = shouldPublish && canPublishInMaf;
+          await mafRoom.localParticipant.setMicrophoneEnabled(shouldMafRoom);
+        } catch (err) {
+          if (
+            err instanceof Error &&
+            (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError')
+          ) {
+            setPermissionDenied(true);
+          }
+        }
       }
     }
 
     updateMicPublish();
-  }, [isMuted, canPublishInPub, canPublishInMaf, pubRoom, mafRoom, permissionDenied]);
+  }, [micEnabled, canSpeakNow, canPublishInPub, canPublishInMaf, pubRoom, mafRoom, permissionDenied]);
 
   if (!voiceAvailable) return null;
 
-  const canSpeakNow = canPublishInPub || canPublishInMaf;
+  const handleClick = async () => {
+    const now = Date.now();
+    if (now - lastClickRef.current < 300) return; // 300ms debounce
+    lastClickRef.current = now;
+
+    // Handle iOS Safari audio unlock
+    try {
+      if (pubRoom) await pubRoom.startAudio();
+      if (mafRoom) await mafRoom.startAudio();
+    } catch {
+      // Audio unlock best-effort
+    }
+
+    toggleMic();
+  };
 
   return (
     <div className="flex items-center gap-2">
       <button
-        onClick={() => setIsMuted((prev) => !prev)}
+        type="button"
+        onClick={handleClick}
         disabled={!canSpeakNow || permissionDenied}
+        aria-pressed={micEnabled}
         className={`px-3 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition ${
           permissionDenied
             ? 'bg-slate-900 border-slate-800 text-slate-500 cursor-not-allowed'
             : !canSpeakNow
               ? 'bg-slate-900 border-slate-800 text-slate-500 opacity-60 cursor-not-allowed'
-              : !isMuted
+              : micEnabled
                 ? isSpeaking
                   ? 'bg-emerald-600 text-white border-emerald-400 shadow-md animate-pulse'
                   : 'bg-emerald-700 text-white border-emerald-500'
@@ -170,12 +195,12 @@ export const VoiceControls: React.FC<VoiceControlsProps> = ({
             ? 'মাইক্রোফোনের অনুমতি প্রত্যাখ্যাত হয়েছে'
             : !canSpeakNow
               ? 'এই পর্বে আপনার কথা বলার অনুমতি নেই'
-              : isMuted
+              : !micEnabled
                 ? 'মাইক্রোফোন চালু করুন'
                 : 'মাইক্রোফোন বন্ধ করুন'
         }
       >
-        {isMuted || !canSpeakNow || permissionDenied ? (
+        {!micEnabled || !canSpeakNow || permissionDenied ? (
           <MicOff className="w-3.5 h-3.5" />
         ) : (
           <Mic className="w-3.5 h-3.5" />
@@ -183,11 +208,13 @@ export const VoiceControls: React.FC<VoiceControlsProps> = ({
         <span>
           {permissionDenied
             ? 'মাইক বন্ধ'
-            : isMuted || !canSpeakNow
+            : !canSpeakNow
               ? 'মিউট'
-              : isSpeaking
-                ? 'কথা বলছেন...'
-                : 'আনমিউট'}
+              : !micEnabled
+                ? 'মিউট'
+                : isSpeaking
+                  ? 'কথা বলছেন...'
+                  : 'আনমিউট'}
         </span>
       </button>
     </div>

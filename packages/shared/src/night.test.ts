@@ -380,4 +380,117 @@ describe('resolveNight - NIGHT-01 suite', () => {
     expect(outcomeDead.silenced).toBeNull();
     expect(outcomeDead.investigation).toBeNull();
   });
+
+  // v1.1 Habildar, Stalker, Disabled abilities, and Teammate targeting tests
+  describe('v1.1 New Roles and Abilities', () => {
+    it('Habildar shoot resolves like Police shot, spends bullet, doctor can save', () => {
+      const players = [P('h', 'habildar'), P('c', 'citizen'), P('d', 'doctor')];
+      const actions: NightActions = {
+        ...baseActions,
+        habildarAction: { kind: 'shoot', targetId: 'c' },
+      };
+      const outcome = resolveNight(players, actions, 0, 1);
+      expect(outcome.deaths).toEqual([{ id: 'c', causes: ['police'] }]);
+      expect(outcome.habildarBulletsSpent).toBe(1);
+
+      // Doctor saves from Habildar shot
+      const savedOutcome = resolveNight(
+        players,
+        { ...actions, doctorProtect: 'c' },
+        0,
+        1,
+      );
+      expect(savedOutcome.deaths).toEqual([]);
+      expect(savedOutcome.saves).toEqual([{ id: 'c', from: 'police' }]);
+      expect(savedOutcome.habildarBulletsSpent).toBe(1);
+    });
+
+    it('Habildar disable sets disabledTarget for mafia target, rejects citizen target', () => {
+      const players = [P('h', 'habildar'), P('k', 'killer'), P('c', 'citizen')];
+      // Target mafia
+      const outcomeMafia = resolveNight(
+        players,
+        { ...baseActions, habildarAction: { kind: 'disable', targetId: 'k' } },
+        0,
+        0,
+      );
+      expect(outcomeMafia.disabledTarget).toBe('k');
+
+      // Target citizen
+      const outcomeCitizen = resolveNight(
+        players,
+        { ...baseActions, habildarAction: { kind: 'disable', targetId: 'c' } },
+        0,
+        0,
+      );
+      expect(outcomeCitizen.disabledTarget).toBeNull();
+    });
+
+    it('Disabled mafia roles (silencer, confuser, stalker) do not execute their actions; killer kill cannot be disabled', () => {
+      const disabledKiller: NightPlayer = { id: 'k', role: 'killer', alive: true, disabled: true };
+      const disabledSilencer: NightPlayer = { id: 's', role: 'silencer', alive: true, disabled: true };
+      const disabledConfuser: NightPlayer = { id: 'cf', role: 'confuser', alive: true, disabled: true };
+      const disabledStalker: NightPlayer = { id: 'st', role: 'stalker', alive: true, disabled: true };
+      const det: NightPlayer = { id: 'd', role: 'detective', alive: true };
+      const citizen: NightPlayer = { id: 'c', role: 'citizen', alive: true };
+
+      const players = [disabledKiller, disabledSilencer, disabledConfuser, disabledStalker, det, citizen];
+      const actions: NightActions = {
+        killerPicks: { k: 'c' },
+        doctorProtect: null,
+        policeShot: null,
+        detectiveTarget: 'cf',
+        confuserTarget: 'c',
+        silencerTarget: 'c',
+        stalkerTarget: 'c',
+      };
+
+      const outcome = resolveNight(players, actions, 0, 0);
+      expect(outcome.deaths).toEqual([{ id: 'c', causes: ['mafia'] }]);
+      expect(outcome.silenced).toBeNull(); // Disabled silencer does not silence
+      expect(outcome.stalkResult).toBeNull(); // Disabled stalker does not check
+      // Detective checks disabled confuser (who is mafia) => result is mafia (confuser didn't frame)
+      expect(outcome.investigation?.result).toBe('mafia');
+    });
+
+    it('Stalker reveals exact role id of Citizen target', () => {
+      const players = [P('st', 'stalker'), P('doc', 'doctor'), P('k', 'killer')];
+      // Stalk doctor
+      const outcomeDoc = resolveNight(
+        players,
+        { ...baseActions, stalkerTarget: 'doc' },
+        0,
+        0,
+      );
+      expect(outcomeDoc.stalkResult).toEqual({ target: 'doc', role: 'doctor' });
+
+      // Stalking mafia is invalid
+      const outcomeMafia = resolveNight(
+        players,
+        { ...baseActions, stalkerTarget: 'k' },
+        0,
+        0,
+      );
+      expect(outcomeMafia.stalkResult).toBeNull();
+    });
+
+    it('Silencer and Confuser can target teammates', () => {
+      const players = [P('s', 'silencer'), P('cf', 'confuser'), P('k', 'killer'), P('det', 'detective')];
+      // Silencer silences teammate killer, confuser frames teammate killer
+      const outcome = resolveNight(
+        players,
+        {
+          ...baseActions,
+          silencerTarget: 'k',
+          confuserTarget: 'k',
+          detectiveTarget: 'k',
+        },
+        0,
+        0,
+      );
+      expect(outcome.silenced).toBe('k');
+      // Confuser frames teammate killer: killer is mafia, framed => notMafia
+      expect(outcome.investigation?.result).toBe('notMafia');
+    });
+  });
 });

@@ -136,6 +136,9 @@ describe('GAME State Machine & Rules', () => {
     players[0].role = 'mayor';
     players[1].role = 'citizen';
     players[2].role = 'citizen';
+    players[3].role = 'killer';
+    players[4].role = 'killer';
+    players[5].role = 'citizen';
 
     game.phase = 'mayorTiebreak';
     game.tiedCandidates = [players[1].id, players[2].id];

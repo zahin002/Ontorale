@@ -2,6 +2,7 @@ import React from 'react';
 import type { PublicPlayer } from '@ontorale/shared';
 import { t } from '../i18n';
 import { VolumeX, Skull, WifiOff } from 'lucide-react';
+import { RoleAvatar } from './RoleAvatar';
 
 interface PlayerGridProps {
   players: PublicPlayer[];
@@ -53,7 +54,8 @@ export const PlayerGrid: React.FC<PlayerGridProps> = ({ players, myId }) => {
 
             <div className="flex flex-wrap items-center justify-between gap-1 text-xs mt-1">
               {p.revealedRole ? (
-                <span className="px-2 py-0.5 rounded font-medium bg-slate-800 text-slate-300 border border-slate-700">
+                <span className="px-2 py-0.5 rounded font-medium bg-slate-800 text-slate-300 border border-slate-700 flex items-center gap-1">
+                  <RoleAvatar role={p.revealedRole} size="sm" />
                   {t(`role.${p.revealedRole}`)}
                 </span>
               ) : (

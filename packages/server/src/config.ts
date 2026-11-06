@@ -6,7 +6,7 @@ const EnvSchema = z
     PORT: z.coerce.number().default(3000),
     NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
     CLIENT_ORIGIN: z.string().default('http://localhost:5173'),
-    MAFIA_WIN_MODE: z.enum(['plusOne', 'examples', 'parity']).default('plusOne'),
+    MAFIA_WIN_MODE: z.enum(['plusOne', 'examples', 'parity']).default('parity'),
     DISCONNECT_GRACE_MS: z.coerce.number().default(0),
     TIMER_SCALE: z.coerce.number().default(1),
     MAX_ROOMS: z.coerce.number().default(20),

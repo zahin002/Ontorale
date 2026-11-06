@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { checkWin } from './win';
+import { checkWin, evaluateOutcome } from './win';
 import type { WinMode } from './types';
 
 describe('checkWin - WIN-01 suite', () => {
@@ -46,12 +46,47 @@ describe('checkWin - WIN-01 suite', () => {
 
   describe('parity mode', () => {
     it('mafia wins if M >= N', () => {
+      // 1v1 => mafia
+      expect(checkWin(1, 1, 'parity')).toBe('mafia');
+      // 1v2 => continues
+      expect(checkWin(1, 2, 'parity')).toBeNull();
+      // M = 0 => citizens
+      expect(checkWin(0, 1, 'parity')).toBe('citizens');
       // M = 2, N = 2 => 2 >= 2 => win
       expect(checkWin(2, 2, 'parity')).toBe('mafia');
       // M = 1, N = 2 => 1 < 2 => continues
       expect(checkWin(1, 2, 'parity')).toBeNull();
       // M = 3, N = 2 => 3 >= 2 => win
       expect(checkWin(3, 2, 'parity')).toBe('mafia');
+    });
+  });
+
+  describe('evaluateOutcome', () => {
+    it('counts only alive and connected players', () => {
+      const outcome = evaluateOutcome({
+        players: [
+          { status: 'alive', role: 'killer', connected: true },
+          { status: 'alive', role: 'citizen', connected: true },
+          { status: 'dead', role: 'citizen', connected: true },
+          { status: 'alive', role: 'citizen', connected: false }, // disconnected ignored
+        ],
+        winMode: 'parity',
+      });
+      // 1 alive connected mafia vs 1 alive connected citizen => mafia wins
+      expect(outcome).toBe('mafia');
+    });
+
+    it('identifies mafia roles including stalker, silencer, confuser', () => {
+      const outcome = evaluateOutcome({
+        players: [
+          { status: 'alive', role: 'stalker', connected: true },
+          { status: 'alive', role: 'citizen', connected: true },
+          { status: 'alive', role: 'doctor', connected: true },
+        ],
+        winMode: 'parity',
+      });
+      // 1 mafia vs 2 citizens => continues
+      expect(outcome).toBeNull();
     });
   });
 });

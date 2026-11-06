@@ -10,6 +10,7 @@ import {
   VoiceReadySchema,
   VoiceTokenSchema,
   VoteCastSchema,
+  isMafiaRole,
 } from '@ontorale/shared';
 import type { RoomManager } from '../rooms/RoomManager';
 import { ipRoomCreateLimiter, SocketRateLimiter } from './rateLimit';
@@ -371,8 +372,7 @@ export function registerSocketHandlers(
       if (!sender) return ack({ ok: false, error: 'notAllowed' });
 
       const { channel, text } = parsed.data;
-      const isMafia =
-        sender.role === 'killer' || sender.role === 'silencer' || sender.role === 'confuser';
+      const isMafia = sender.role ? isMafiaRole(sender.role) : false;
 
       // Check permissions per D18:
       // Lobby and gameOver: public chat open to all.
@@ -416,7 +416,7 @@ export function registerSocketHandlers(
           recipientSocket.emit('chat', msg);
         } else if (channel === 'mafia') {
           // Mafia chat delivered only to alive mafia
-          const recIsMafia = p.role === 'killer' || p.role === 'silencer' || p.role === 'confuser';
+          const recIsMafia = p.role ? isMafiaRole(p.role) : false;
           if (recIsMafia && p.status === 'alive') {
             recipientSocket.emit('chat', msg);
           }
@@ -449,8 +449,7 @@ export function registerSocketHandlers(
       if (!player) return ack({ ok: false, error: 'notAllowed' });
 
       const { channel } = parsed.data;
-      const isMafia =
-        player.role === 'killer' || player.role === 'silencer' || player.role === 'confuser';
+      const isMafia = player.role ? isMafiaRole(player.role) : false;
 
       if (channel === 'mafia') {
         if (!isMafia || player.status !== 'alive' || game.phase === 'lobby') {
@@ -528,8 +527,7 @@ function sendChatHistory(socket: Socket, game: Game, playerId: string): void {
   const player = game.getPlayer(playerId);
   if (!player) return;
 
-  const isMafia =
-    player.role === 'killer' || player.role === 'silencer' || player.role === 'confuser';
+  const isMafia = player.role ? isMafiaRole(player.role) : false;
   const visible = game.chatHistory.filter((m) => {
     if (m.channel === 'public') return true;
     if (m.channel === 'mafia') {

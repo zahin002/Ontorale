@@ -178,15 +178,11 @@ describe('Integration Scenarios 3 & 4', () => {
       }
     }
 
-    // Advance clock past voting (60s) -> voteResult
+    // Advance clock past voting (60s) -> elimination of last mafia ends game immediately (Section 3)
     fakeClock.advanceBy(60_000);
-    expect(game.phase).toBe('voteResult');
+    expect(game.phase).toBe('gameOver');
     expect(killer.status).toBe('dead');
     expect(killer.revealedRole).toBe('killer');
-
-    // Advance clock past voteResult (10s) -> gameOver (win check)
-    fakeClock.advanceBy(10_000);
-    expect(game.phase).toBe('gameOver');
     expect(game.winner).toBe('citizens');
 
     // Host triggers rematch from gameOver

@@ -12,7 +12,7 @@ export function getLocale(): Locale {
   return currentLocale;
 }
 
-export function t(key: string, params?: Record<string, string>): string {
+export function t(key: string, params?: Record<string, string | number>): string {
   const dict = currentLocale === 'bn' ? bn : en;
   const fallbackDict = en;
 
@@ -21,7 +21,7 @@ export function t(key: string, params?: Record<string, string>): string {
 
   if (params) {
     for (const [k, v] of Object.entries(params)) {
-      text = text.replace(new RegExp(`\\{${k}\\}`, 'g'), v);
+      text = text.replace(new RegExp(`\\{${k}\\}`, 'g'), String(v));
     }
   }
 

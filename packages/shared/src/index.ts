@@ -6,3 +6,4 @@ export * from './vote';
 export * from './win';
 export * from './events';
 export * from './schemas';
+export * from './abilities';

@@ -186,8 +186,10 @@ export const Lobby: React.FC<LobbyProps> = ({ state }) => {
                     [
                       ['detective', 'role.detective'],
                       ['mayor', 'role.mayor'],
+                      ['habildar', 'role.habildar'],
                       ['silencer', 'role.silencer'],
                       ['confuser', 'role.confuser'],
+                      ['stalker', 'role.stalker'],
                     ] as const
                   ).map(([key, labelKey]) => (
                     <button

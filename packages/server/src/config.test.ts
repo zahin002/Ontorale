@@ -9,7 +9,7 @@ describe('config module', () => {
     });
     expect(config.PORT).toBe(3000);
     expect(config.NODE_ENV).toBe('development');
-    expect(config.MAFIA_WIN_MODE).toBe('plusOne');
+    expect(config.MAFIA_WIN_MODE).toBe('parity');
     expect(config.TIMER_SCALE).toBe(1);
     expect(config.MAX_ROOMS).toBe(20);
   });

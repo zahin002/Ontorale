@@ -4,6 +4,7 @@ import {
   type PublicPlayer,
   type Role,
   type Team,
+  isMafiaRole,
   validPlayerCounts,
 } from '@ontorale/shared';
 import type { Game } from './Game';
@@ -13,7 +14,7 @@ export function projectFor(game: Game, recipientId: PlayerId): ClientState {
   const now = game.clock.now();
 
   const isGameOver = game.phase === 'gameOver';
-  const isMafia = me?.role === 'killer' || me?.role === 'silencer' || me?.role === 'confuser';
+  const isMafia = me?.role ? isMafiaRole(me.role) : false;
   const isAliveMafia = isMafia && me?.status === 'alive';
 
   // Public players representation
@@ -39,11 +40,7 @@ export function projectFor(game: Game, recipientId: PlayerId): ClientState {
   if (isAliveMafia) {
     mafiaTeam = game
       .getAllPlayers()
-      .filter(
-        (p) =>
-          p.status === 'alive' &&
-          (p.role === 'killer' || p.role === 'silencer' || p.role === 'confuser'),
-      )
+      .filter((p) => p.status === 'alive' && p.role && isMafiaRole(p.role))
       .map((p) => ({ id: p.id, role: p.role! }));
   }
 
@@ -52,12 +49,23 @@ export function projectFor(game: Game, recipientId: PlayerId): ClientState {
   const pendingAction = me ? game.getPendingAction(recipientId) : null;
   const myVote = me ? game.getPendingVote(recipientId) : null;
 
-  // Bullets: police only
-  const bullets = me?.role === 'police' ? game.policeBullets : null;
+  // Bullets: police or habildar
+  let bullets: number | null = null;
+  if (me?.role === 'police') {
+    bullets = game.policeBullets;
+  } else if (me?.role === 'habildar') {
+    bullets = game.getHabildarBullets(recipientId);
+  }
 
   // Investigations: detective only
   const investigations =
     me?.role === 'detective' ? game.getDetectiveInvestigations(recipientId) : [];
+
+  // Stalk results: stalker only
+  const stalkResults = me?.role === 'stalker' ? game.getStalkerResults(recipientId) : undefined;
+
+  // Ability status (investigations remaining, checks remaining, cooldowns, disabled)
+  const abilityStatus = me ? game.getPlayerAbilityStatus(recipientId) : undefined;
 
   // Mayor options: only for mayor during mayorTiebreak
   const mayorOptions =
@@ -103,7 +111,9 @@ export function projectFor(game: Game, recipientId: PlayerId): ClientState {
       allowedTargets,
       myVote,
       investigations,
+      stalkResults,
       mayorOptions,
+      abilityStatus,
     },
     log: game.log,
     voteResult: game.publishedVoteResult,

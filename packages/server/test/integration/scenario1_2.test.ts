@@ -247,6 +247,8 @@ describe('Integration Scenarios 1 & 2', () => {
         mayor: true,
         silencer: true, // not valid for 6 players
         confuser: false,
+        habildar: false,
+        stalker: false,
       },
     });
     expect(settingsRes.ok).toBe(true);
@@ -265,6 +267,8 @@ describe('Integration Scenarios 1 & 2', () => {
         mayor: true,
         silencer: false,
         confuser: false,
+        habildar: false,
+        stalker: false,
       },
     });
     expect(validSettingsRes.ok).toBe(true);

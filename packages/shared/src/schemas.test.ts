@@ -37,7 +37,14 @@ describe('schemas validation', () => {
     const valid = {
       discussionSec: 180,
       voteSec: 60,
-      optional: { detective: true, silencer: false, confuser: false, mayor: true },
+      optional: {
+        detective: true,
+        silencer: false,
+        confuser: false,
+        mayor: true,
+        habildar: false,
+        stalker: false,
+      },
     };
     expect(RoomSettingsSchema.parse(valid)).toEqual(valid);
     expect(() =>

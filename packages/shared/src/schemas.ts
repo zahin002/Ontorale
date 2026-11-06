@@ -14,6 +14,8 @@ export const OptionalRolesSchema = z.object({
   silencer: z.boolean(),
   confuser: z.boolean(),
   mayor: z.boolean(),
+  habildar: z.boolean(),
+  stalker: z.boolean(),
 });
 
 export const RoomSettingsSchema = z.object({
@@ -44,7 +46,16 @@ export const RoomResumeSchema = z.object({
 });
 
 export const ActionSubmitSchema = z.object({
-  kind: z.enum(['kill', 'protect', 'shoot', 'investigate', 'confuse', 'silence']),
+  kind: z.enum([
+    'kill',
+    'protect',
+    'shoot',
+    'investigate',
+    'confuse',
+    'silence',
+    'disable',
+    'stalk',
+  ]),
   targetId: z.string().nullable(),
 });
 

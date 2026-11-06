@@ -1,7 +1,16 @@
 export type PlayerId = string;
 
 export type Role =
-  'citizen' | 'doctor' | 'police' | 'detective' | 'mayor' | 'killer' | 'silencer' | 'confuser';
+  | 'citizen'
+  | 'doctor'
+  | 'police'
+  | 'detective'
+  | 'mayor'
+  | 'killer'
+  | 'silencer'
+  | 'confuser'
+  | 'habildar'
+  | 'stalker';
 
 export type Team = 'citizens' | 'mafia';
 
@@ -22,6 +31,8 @@ export interface OptionalRoles {
   silencer: boolean;
   confuser: boolean;
   mayor: boolean;
+  habildar: boolean;
+  stalker: boolean;
 }
 
 export interface RoomSettings {
@@ -30,13 +41,21 @@ export interface RoomSettings {
   optional: OptionalRoles;
 }
 
-export type ActionKind = 'kill' | 'protect' | 'shoot' | 'investigate' | 'confuse' | 'silence';
+export type ActionKind =
+  | 'kill'
+  | 'protect'
+  | 'shoot'
+  | 'investigate'
+  | 'confuse'
+  | 'silence'
+  | 'disable'
+  | 'stalk';
 
-export type Cause = 'mafia' | 'police';
+export type Cause = 'mafia' | 'police' | 'habildar';
 
 export type GameEvent =
-  | { kind: 'death'; id: PlayerId; causes: ('mafia' | 'police')[]; role: Role } // role = true role
-  | { kind: 'saved'; id: PlayerId; from: 'mafia' | 'police' }
+  | { kind: 'death'; id: PlayerId; causes: ('mafia' | 'police' | 'habildar')[]; role: Role } // role = true role
+  | { kind: 'saved'; id: PlayerId; from: 'mafia' | 'police' | 'habildar' }
   | { kind: 'silenced'; id: PlayerId }
   | { kind: 'noDeaths' }
   | { kind: 'voteOut'; id: PlayerId; role: Role; by: 'vote' | 'mayor' }
@@ -70,13 +89,21 @@ export interface ClientState {
     team: Team | null;
     alive: boolean;
     isHost: boolean;
-    bullets: number | null; // police only
+    bullets: number | null; // police / habildar bullets
     mafiaTeam: { id: PlayerId; role: Role }[] | null; // alive mafia only
     pendingAction: { kind: ActionKind; target: PlayerId | null } | null;
     allowedTargets: PlayerId[]; // for my current action/vote
     myVote: PlayerId | null;
     investigations: { round: number; target: PlayerId; result: 'mafia' | 'notMafia' }[]; // detective only
+    stalkResults?: { round: number; target: PlayerId; role: Role }[]; // stalker only
     mayorOptions: PlayerId[] | null; // only the mayor during mayorTiebreak
+    abilityStatus?: {
+      investigate?: { remaining: number };
+      stalk?: { remaining: number };
+      shoot?: { remaining: number };
+      disable?: { cooldownUntilRound: number; canUse: boolean };
+      disabled?: { untilRound: number; active: boolean };
+    };
   };
   log: { round: number; phase: Phase; event: GameEvent }[]; // public events only
   voteResult: { counts: Record<PlayerId, number>; votes: Record<PlayerId, PlayerId | null> } | null;

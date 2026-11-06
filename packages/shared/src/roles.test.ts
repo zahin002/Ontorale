@@ -20,48 +20,75 @@ function createSeededRng(seed = 123456789): Rng {
   };
 }
 
+const baseOpt: OptionalRoles = {
+  detective: false,
+  mayor: false,
+  habildar: false,
+  silencer: false,
+  confuser: false,
+  stalker: false,
+};
+
 describe('roles module', () => {
-  // ROLE-01: Exhaustive check for n ∈ 6..15 and all 16 optional combinations
-  it('ROLE-01: validates role distribution for all n ∈ 6..15 and all 16 optional combos', () => {
+  // ROLE-01: Exhaustive check for n ∈ 6..15 and all 64 optional combinations (Section 10)
+  it('ROLE-01: validates role distribution for all n ∈ 6..15 and all 64 optional combos', () => {
     const booleanOptions = [false, true];
 
     for (let n = 6; n <= 15; n++) {
       for (const detective of booleanOptions) {
-        for (const silencer of booleanOptions) {
-          for (const confuser of booleanOptions) {
-            for (const mayor of booleanOptions) {
-              const opt: OptionalRoles = { detective, silencer, confuser, mayor };
-              const result = buildRoleList(n, opt);
+        for (const mayor of booleanOptions) {
+          for (const habildar of booleanOptions) {
+            for (const silencer of booleanOptions) {
+              for (const confuser of booleanOptions) {
+                for (const stalker of booleanOptions) {
+                  const opt: OptionalRoles = {
+                    detective,
+                    mayor,
+                    habildar,
+                    silencer,
+                    confuser,
+                    stalker,
+                  };
+                  const result = buildRoleList(n, opt);
 
-              const expectedMafiaTotal = MAFIA_COUNT[n];
-              const optMafiaCount = Number(silencer) + Number(confuser);
-              const minKillers = expectedMafiaTotal >= 2 ? 2 : 1;
-              const expectedKillers = expectedMafiaTotal - optMafiaCount;
+                  const expectedMafiaTotal = MAFIA_COUNT[n];
+                  const optMafiaCount = Number(silencer) + Number(confuser) + Number(stalker);
+                  const minKillers = expectedMafiaTotal >= 2 ? 2 : 1;
+                  const expectedKillers = expectedMafiaTotal - optMafiaCount;
 
-              if (expectedKillers < minKillers) {
-                expect(result).toEqual({ error: 'roleConfigInvalid' });
-              } else {
-                expect(Array.isArray(result)).toBe(true);
-                const roles = result as Role[];
-                expect(roles.length).toBe(n);
+                  if (expectedKillers < minKillers) {
+                    expect(result).toEqual({ error: 'roleConfigInvalid' });
+                  } else {
+                    expect(Array.isArray(result)).toBe(true);
+                    const roles = result as Role[];
+                    expect(roles.length).toBe(n);
 
-                // Exactly 1 doctor and 1 police
-                expect(roles.filter((r) => r === 'doctor').length).toBe(1);
-                expect(roles.filter((r) => r === 'police').length).toBe(1);
+                    // Exactly 1 doctor and 1 police
+                    expect(roles.filter((r) => r === 'doctor').length).toBe(1);
+                    expect(roles.filter((r) => r === 'police').length).toBe(1);
 
-                // Optional citizen roles
-                expect(roles.filter((r) => r === 'detective').length).toBe(detective ? 1 : 0);
-                expect(roles.filter((r) => r === 'mayor').length).toBe(mayor ? 1 : 0);
+                    // Optional citizen roles
+                    expect(roles.filter((r) => r === 'detective').length).toBe(detective ? 1 : 0);
+                    expect(roles.filter((r) => r === 'mayor').length).toBe(mayor ? 1 : 0);
+                    expect(roles.filter((r) => r === 'habildar').length).toBe(habildar ? 1 : 0);
 
-                // Mafia composition
-                expect(roles.filter((r) => r === 'killer').length).toBe(expectedKillers);
-                expect(roles.filter((r) => r === 'silencer').length).toBe(silencer ? 1 : 0);
-                expect(roles.filter((r) => r === 'confuser').length).toBe(confuser ? 1 : 0);
+                    // Mafia composition
+                    expect(roles.filter((r) => r === 'killer').length).toBe(expectedKillers);
+                    expect(roles.filter((r) => r === 'silencer').length).toBe(silencer ? 1 : 0);
+                    expect(roles.filter((r) => r === 'confuser').length).toBe(confuser ? 1 : 0);
+                    expect(roles.filter((r) => r === 'stalker').length).toBe(stalker ? 1 : 0);
 
-                const totalMafia = roles.filter(
-                  (r) => r === 'killer' || r === 'silencer' || r === 'confuser',
-                ).length;
-                expect(totalMafia).toBe(expectedMafiaTotal);
+                    const totalMafia = roles.filter(
+                      (r) =>
+                        r === 'killer' ||
+                        r === 'silencer' ||
+                        r === 'confuser' ||
+                        r === 'stalker',
+                    ).length;
+                    expect(totalMafia).toBe(expectedMafiaTotal);
+                    expect(roles.filter((r) => r === 'citizen').length).toBeGreaterThanOrEqual(0);
+                  }
+                }
               }
             }
           }
@@ -72,78 +99,66 @@ describe('roles module', () => {
 
   // Out of bounds player count check
   it('rejects invalid player count outside 6..15', () => {
-    const defaultOpt: OptionalRoles = {
-      detective: false,
-      silencer: false,
-      confuser: false,
-      mayor: false,
-    };
-    expect(buildRoleList(5, defaultOpt)).toEqual({ error: 'playerCountInvalid' });
-    expect(buildRoleList(16, defaultOpt)).toEqual({ error: 'playerCountInvalid' });
+    expect(buildRoleList(5, baseOpt)).toEqual({ error: 'playerCountInvalid' });
+    expect(buildRoleList(16, baseOpt)).toEqual({ error: 'playerCountInvalid' });
   });
 
   // ROLE-02: Specific error cases
   it('ROLE-02: enforces error cases for invalid mafia optional role configurations', () => {
-    const bothMafiaOpt: OptionalRoles = {
-      detective: false,
-      mayor: false,
+    const twoMafiaOpt: OptionalRoles = {
+      ...baseOpt,
       silencer: true,
       confuser: true,
     };
     const silencerOnly: OptionalRoles = {
-      detective: false,
-      mayor: false,
+      ...baseOpt,
       silencer: true,
-      confuser: false,
     };
     const confuserOnly: OptionalRoles = {
-      detective: false,
-      mayor: false,
-      silencer: false,
+      ...baseOpt,
       confuser: true,
     };
+    const stalkerOnly: OptionalRoles = {
+      ...baseOpt,
+      stalker: true,
+    };
 
-    // silencer + confuser with n < 12
-    for (let n = 6; n < 12; n++) {
-      expect(buildRoleList(n, bothMafiaOpt)).toEqual({ error: 'roleConfigInvalid' });
-    }
-
-    // any mafia-optional role with n ∈ {6, 7, 8, 9}
+    // Any mafia-optional role with n ∈ {6, 7, 8, 9} (mafia = 1 or 2, killers must be >= 1 or >= 2)
     for (const n of [6, 7, 8, 9]) {
       expect(buildRoleList(n, silencerOnly)).toEqual({ error: 'roleConfigInvalid' });
       expect(buildRoleList(n, confuserOnly)).toEqual({ error: 'roleConfigInvalid' });
+      expect(buildRoleList(n, stalkerOnly)).toEqual({ error: 'roleConfigInvalid' });
     }
 
-    // both silencer and confuser with n ∈ {10, 11}
-    for (const n of [10, 11]) {
-      expect(buildRoleList(n, bothMafiaOpt)).toEqual({ error: 'roleConfigInvalid' });
+    // Two mafia-optional roles with n ∈ {6, 7, 8, 9, 10, 11}
+    // (at 10-11, mafia=3, minKillers=2 => only 1 opt allowed)
+    for (let n = 6; n < 12; n++) {
+      expect(buildRoleList(n, twoMafiaOpt)).toEqual({ error: 'roleConfigInvalid' });
     }
   });
 
   // validPlayerCounts
   it('validPlayerCounts correctly filters counts based on optional roles', () => {
     const defaultOpt: OptionalRoles = {
+      ...baseOpt,
       detective: true,
       mayor: true,
-      silencer: false,
-      confuser: false,
     };
     expect(validPlayerCounts(defaultOpt)).toEqual([6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
 
-    const bothMafiaOpt: OptionalRoles = {
-      detective: true,
-      mayor: true,
+    const twoMafiaOpt: OptionalRoles = {
+      ...baseOpt,
       silencer: true,
       confuser: true,
     };
-    expect(validPlayerCounts(bothMafiaOpt)).toEqual([12, 13, 14, 15]);
+    // 2 mafia optional roles require 4 mafia total => n in 12..15
+    expect(validPlayerCounts(twoMafiaOpt)).toEqual([12, 13, 14, 15]);
 
     const oneMafiaOpt: OptionalRoles = {
-      detective: true,
-      mayor: true,
+      ...baseOpt,
       silencer: true,
-      confuser: false,
     };
+    // 1 mafia optional requires 3 mafia total => n in 10..15
     expect(validPlayerCounts(oneMafiaOpt)).toEqual([10, 11, 12, 13, 14, 15]);
   });
 
@@ -165,10 +180,9 @@ describe('roles module', () => {
     // assignRoles test
     const players = ['p1', 'p2', 'p3', 'p4', 'p5', 'p6'];
     const opt: OptionalRoles = {
+      ...baseOpt,
       detective: true,
       mayor: true,
-      silencer: false,
-      confuser: false,
     };
 
     const assigned = assignRoles(players, opt, createSeededRng(99));

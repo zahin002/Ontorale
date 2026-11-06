@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import type { ClientState } from '@ontorale/shared';
+import type { ClientState, Role } from '@ontorale/shared';
+import { isMafiaRole } from '@ontorale/shared';
 import { useGameStore } from '../store/useGameStore';
 import { t } from '../i18n';
 import { Send, MessageSquare, ShieldAlert } from 'lucide-react';
@@ -12,10 +13,12 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ state }) => {
   const { chatMessages, sendChat } = useGameStore();
   const [activeChannel, setActiveChannel] = useState<'public' | 'mafia'>('public');
   const [text, setText] = useState('');
+  const [unreadMafia, setUnreadMafia] = useState(false);
+  const [unreadPublic, setUnreadPublic] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const { me, phase, players } = state;
-  const isMafia = me.role === 'killer' || me.role === 'silencer' || me.role === 'confuser';
+  const isMafia = me.team === 'mafia' || (me.role && isMafiaRole(me.role as Role));
   const isAliveMafia = isMafia && me.alive;
   const mePublic = players.find((p) => p.id === me.id);
   const isSilenced = mePublic?.silenced ?? false;
@@ -31,7 +34,15 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ state }) => {
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [chatMessages]);
+    const lastMsg = chatMessages[chatMessages.length - 1];
+    if (lastMsg) {
+      if (lastMsg.channel === 'mafia' && activeChannel !== 'mafia') {
+        setUnreadMafia(true);
+      } else if (lastMsg.channel === 'public' && activeChannel !== 'public') {
+        setUnreadPublic(true);
+      }
+    }
+  }, [chatMessages, activeChannel]);
 
   const canSendChat = (): { allowed: boolean; reason?: string } => {
     if (!me.alive) return { allowed: false, reason: 'মৃত খেলোয়াড় বার্তা পাঠাতে পারেন না' };
@@ -71,30 +82,46 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ state }) => {
   const sendStatus = canSendChat();
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl flex flex-col h-[320px] shadow-lg overflow-hidden">
+    <div className="bg-slate-900 border border-slate-800 rounded-2xl flex flex-col h-[380px] lg:h-[620px] shadow-xl overflow-hidden w-full">
       {/* Channel Tabs */}
-      <div className="flex border-b border-slate-800 bg-slate-950/60 text-xs font-semibold">
+      <div className="flex border-b border-slate-800 bg-slate-950/60 text-xs font-semibold shrink-0">
         <button
-          onClick={() => setActiveChannel('public')}
-          className={`flex-1 py-2 px-3 flex items-center justify-center gap-1.5 border-b-2 transition ${
+          type="button"
+          onClick={() => {
+            setActiveChannel('public');
+            setUnreadPublic(false);
+          }}
+          className={`flex-1 py-2.5 px-3 flex items-center justify-center gap-1.5 border-b-2 transition relative ${
             activeChannel === 'public'
               ? 'border-rose-500 text-rose-400 bg-rose-500/5'
               : 'border-transparent text-slate-400 hover:text-slate-200'
           }`}
         >
-          <MessageSquare className="w-3.5 h-3.5" /> {t('ui.publicChat')}
+          <MessageSquare className="w-3.5 h-3.5" />
+          <span>{t('ui.publicChat')}</span>
+          {unreadPublic && activeChannel !== 'public' && (
+            <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse ml-1" />
+          )}
         </button>
 
         {isAliveMafia && (
           <button
-            onClick={() => setActiveChannel('mafia')}
-            className={`flex-1 py-2 px-3 flex items-center justify-center gap-1.5 border-b-2 transition ${
+            type="button"
+            onClick={() => {
+              setActiveChannel('mafia');
+              setUnreadMafia(false);
+            }}
+            className={`flex-1 py-2.5 px-3 flex items-center justify-center gap-1.5 border-b-2 transition relative ${
               activeChannel === 'mafia'
                 ? 'border-red-600 text-red-400 bg-red-600/5'
                 : 'border-transparent text-slate-400 hover:text-slate-200'
             }`}
           >
-            <ShieldAlert className="w-3.5 h-3.5" /> {t('ui.mafiaChat')}
+            <ShieldAlert className="w-3.5 h-3.5" />
+            <span>{t('ui.mafiaChat')}</span>
+            {unreadMafia && activeChannel !== 'mafia' && (
+              <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse ml-1" />
+            )}
           </button>
         )}
       </div>
@@ -102,7 +129,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ state }) => {
       {/* Messages Scroll Area */}
       <div className="flex-1 overflow-y-auto p-3 space-y-2 text-xs">
         {filteredMessages.length === 0 ? (
-          <div className="text-center text-slate-500 mt-12 font-medium">কোনো বার্তা নেই</div>
+          <div className="text-center text-slate-500 mt-16 font-medium">কোনো বার্তা নেই</div>
         ) : (
           filteredMessages.map((msg) => {
             const isMyMsg = msg.from === me.id;
@@ -126,7 +153,6 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ state }) => {
                         : 'bg-slate-800 text-slate-200 rounded-bl-none'
                   }`}
                 >
-                  {/* Escaped plain text rendering */}
                   {msg.text}
                 </div>
               </div>
@@ -136,10 +162,10 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ state }) => {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input Area */}
+      {/* Input Area Pinned at Bottom */}
       <form
         onSubmit={handleSend}
-        className="p-2 border-t border-slate-800 bg-slate-950/40 flex gap-2"
+        className="p-2 border-t border-slate-800 bg-slate-950/60 flex gap-2 shrink-0"
       >
         <input
           data-testid="chat-input"

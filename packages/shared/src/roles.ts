@@ -1,5 +1,5 @@
 import { MAFIA_COUNT } from './constants';
-import type { OptionalRoles, Role, PlayerId } from './types';
+import type { OptionalRoles, Role, PlayerId, Team } from './types';
 
 export { MAFIA_COUNT };
 
@@ -7,22 +7,35 @@ export interface Rng {
   int(maxExclusive: number): number;
 }
 
+export const isMafiaRole = (r: Role): boolean =>
+  r === 'killer' || r === 'silencer' || r === 'confuser' || r === 'stalker';
+
+export const isCitizenRole = (r: Role): boolean => !isMafiaRole(r);
+
+export const teamForRole = (r: Role): Team => (isMafiaRole(r) ? 'mafia' : 'citizens');
+
 export function buildRoleList(
   n: number,
   opt: OptionalRoles,
 ): Role[] | { error: 'playerCountInvalid' | 'roleConfigInvalid' } {
   const mafia = MAFIA_COUNT[n];
   if (mafia === undefined) return { error: 'playerCountInvalid' };
-  const optMafia = Number(opt.silencer) + Number(opt.confuser);
+  const optMafia =
+    Number(Boolean(opt.silencer)) +
+    Number(Boolean(opt.confuser)) +
+    Number(Boolean(opt.stalker));
   const killers = mafia - optMafia;
   const minKillers = mafia >= 2 ? 2 : 1;
   if (killers < minKillers) return { error: 'roleConfigInvalid' };
   const roles: Role[] = ['doctor', 'police'];
   if (opt.detective) roles.push('detective');
   if (opt.mayor) roles.push('mayor');
+  if (opt.habildar) roles.push('habildar');
   for (let i = 0; i < killers; i++) roles.push('killer');
   if (opt.silencer) roles.push('silencer');
   if (opt.confuser) roles.push('confuser');
+  if (opt.stalker) roles.push('stalker');
+  if (roles.length > n) return { error: 'roleConfigInvalid' };
   while (roles.length < n) roles.push('citizen');
   return roles; // length === n always
 }
