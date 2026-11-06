@@ -17,6 +17,7 @@ export const Game: React.FC<GameProps> = ({ state }) => {
   const playerMap = new Map<string, string>(players.map((p) => [p.id, p.nickname]));
 
   const isMafia = me.team === 'mafia';
+  const mePublic = players.find((p) => p.id === me.id);
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100 font-sans pb-8">
@@ -26,6 +27,9 @@ export const Game: React.FC<GameProps> = ({ state }) => {
         phaseEndsAt={phaseEndsAt}
         serverNow={serverNow}
         roomCode={roomCode}
+        alive={me.alive}
+        isMafia={isMafia}
+        silenced={mePublic?.silenced ?? false}
       />
 
       <main className="max-w-5xl mx-auto w-full p-4 space-y-6 flex-1">

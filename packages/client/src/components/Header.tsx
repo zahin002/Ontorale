@@ -1,5 +1,6 @@
 import React from 'react';
 import { Countdown } from './Countdown';
+import { VoiceControls } from './VoiceControls';
 import { t, setLocale, getLocale } from '../i18n';
 import type { Phase } from '@ontorale/shared';
 
@@ -9,6 +10,9 @@ interface HeaderProps {
   phaseEndsAt: number | null;
   serverNow: number;
   roomCode: string;
+  alive?: boolean;
+  isMafia?: boolean;
+  silenced?: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -17,6 +21,9 @@ export const Header: React.FC<HeaderProps> = ({
   phaseEndsAt,
   serverNow,
   roomCode,
+  alive = true,
+  isMafia = false,
+  silenced = false,
 }) => {
   const currentLang = getLocale();
 
@@ -55,6 +62,14 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
           <Countdown phaseEndsAt={phaseEndsAt} serverNow={serverNow} />
+
+          <VoiceControls
+            roomCode={roomCode}
+            phase={phase}
+            alive={alive}
+            isMafia={isMafia}
+            silenced={silenced}
+          />
 
           <button
             onClick={toggleLanguage}
