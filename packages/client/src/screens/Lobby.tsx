@@ -70,12 +70,6 @@ export const Lobby: React.FC<LobbyProps> = ({ state }) => {
           <div className="text-sm font-semibold text-slate-300 flex items-center gap-1.5 justify-end">
             <Users className="w-4 h-4 text-rose-400" /> {playerCount} / 15 খেলোয়াড়
           </div>
-          <div className="text-xs text-slate-400 mt-1">
-            বৈধ খেলোয়াড় সংখ্যা:{' '}
-            <span className="font-mono font-semibold text-rose-400">
-              {validPlayerCounts.join(', ')}
-            </span>
-          </div>
         </div>
       </div>
 
