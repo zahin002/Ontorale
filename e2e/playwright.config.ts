@@ -5,6 +5,8 @@ import { fileURLToPath } from 'node:url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const testPort = process.env.TEST_PORT || '3099';
+
 export default defineConfig({
   testDir: './tests',
   fullyParallel: false,
@@ -14,19 +16,19 @@ export default defineConfig({
   reporter: 'html',
   timeout: 30000,
   use: {
-    baseURL: 'http://localhost:3000',
+    baseURL: `http://localhost:${testPort}`,
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
   },
   webServer: {
     command: 'node ../packages/server/dist/index.js',
-    url: 'http://localhost:3000/healthz',
+    url: `http://localhost:${testPort}/healthz`,
     reuseExistingServer: false,
     cwd: __dirname,
     env: {
       NODE_ENV: 'test',
       TIMER_SCALE: '0.02',
-      PORT: '3000',
+      PORT: testPort,
     },
   },
   projects: [
