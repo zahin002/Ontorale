@@ -63,14 +63,14 @@ ontorale/
 
 ### Team Citizens
 
-| Role          | Bengali Name  | Ability & Rules                                                                                                                                                                   |
-| :------------ | :------------ | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Citizen**   | সাধারণ নাগরিক | Votes during the day to identify and eliminate the Mafia.                                                                                                                         |
-| **Doctor**    | ডাক্তার       | Chooses one player each night to protect from death (cannot protect self twice in a row).                                                                                         |
-| **Police**    | পুলিশ         | Starts with 2 bullets; can choose to shoot one target each night until ammunition is depleted.                                                                                    |
-| **Detective** | গোয়েন্দা     | Investigates one player at night to uncover whether they are Mafia or Citizen (2 lifetime investigations limit).                                                                  |
-| **Mayor**     | মেয়র         | Has daytime tiebreaker authority: if a vote ends in a tie, the Mayor selects who is eliminated.                                                                                   |
-| **Constable** | হাবিলদার      | Optional Citizen role. Night actions: shoot (1 bullet lifetime limit, Doctor can save), disable an alive Mafia member's abilities for 2 rounds (1-round cooldown), or do nothing. |
+| Role          | Bengali Name  | Ability & Rules                                                                                                                                                                                                            |
+| :------------ | :------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Citizen**   | সাধারণ নাগরিক | Votes during the day to identify and eliminate the Mafia.                                                                                                                                                                  |
+| **Doctor**    | ডাক্তার       | Chooses one player each night to protect from death (cannot protect self twice in a row).                                                                                                                                  |
+| **Police**    | পুলিশ         | Starts with 2 bullets; can choose to shoot one target each night until ammunition is depleted.                                                                                                                             |
+| **Detective** | গোয়েন্দা     | Investigates one player at night to uncover whether they are Mafia or Citizen (2 lifetime investigations limit).                                                                                                           |
+| **Mayor**     | মেয়র         | Has daytime tiebreaker authority: if a vote ends in a tie, the Mayor selects who is eliminated.                                                                                                                            |
+| **Constable** | হাবিলদার      | Optional Citizen role. Night actions: shoot (1 bullet lifetime limit, Doctor can save), disable any other alive player's special ability for 2 rounds (1-round cooldown), or do nothing. Killer's kill cannot be disabled. |
 
 ### Team Mafia
 

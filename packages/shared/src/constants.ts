@@ -1,3 +1,6 @@
+export const APP_NAME = 'Ontorale';
+export const APP_DISPLAY_NAME_BN = 'অন্তরালে';
+
 export const MIN_PLAYERS = 6;
 export const MAX_PLAYERS = 15;
 

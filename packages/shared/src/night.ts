@@ -1,5 +1,6 @@
 import type { PlayerId, Role, Cause } from './types';
 import { isMafiaRole } from './roles';
+import { hasDisableableAbility } from './abilities';
 
 export interface NightPlayer {
   id: PlayerId;
@@ -28,6 +29,7 @@ export interface NightOutcome {
   investigation: { target: PlayerId; result: 'mafia' | 'notMafia' } | null;
   stalkResult?: { target: PlayerId; role: Role } | null;
   disabledTarget?: PlayerId | null;
+  habildarDisableUsed?: boolean;
   bulletsSpent: 0 | 1;
   habildarBulletsSpent?: 0 | 1;
   mafiaCancelled: boolean; // internal only; NEVER sent to clients
@@ -63,7 +65,13 @@ export function resolveNight(
   const police = actor('police');
   let policeTarget: PlayerId | null = null;
   let bulletsSpent: 0 | 1 = 0;
-  if (police && policeBullets > 0 && alive(a.policeShot) && a.policeShot !== police.id) {
+  if (
+    police &&
+    !police.disabled &&
+    policeBullets > 0 &&
+    alive(a.policeShot) &&
+    a.policeShot !== police.id
+  ) {
     policeTarget = a.policeShot;
     bulletsSpent = 1;
   }
@@ -73,10 +81,12 @@ export function resolveNight(
   let habildarShootTarget: PlayerId | null = null;
   let habildarBulletsSpent: 0 | 1 = 0;
   let disabledTarget: PlayerId | null = null;
+  let habildarDisableUsed = false;
 
   if (habildar && a.habildarAction) {
     if (
       a.habildarAction.kind === 'shoot' &&
+      !habildar.disabled &&
       habildarBullets > 0 &&
       alive(a.habildarAction.targetId) &&
       a.habildarAction.targetId !== habildar.id
@@ -89,8 +99,9 @@ export function resolveNight(
       alive(a.habildarAction.targetId) &&
       a.habildarAction.targetId !== habildar.id
     ) {
+      habildarDisableUsed = true;
       const targetPlayer = byId.get(a.habildarAction.targetId);
-      if (targetPlayer && isMafiaRole(targetPlayer.role)) {
+      if (targetPlayer && hasDisableableAbility(targetPlayer.role)) {
         disabledTarget = targetPlayer.id;
       }
     }
@@ -98,7 +109,7 @@ export function resolveNight(
 
   // Doctor protect
   const doctor = actor('doctor');
-  const protectedId = doctor && alive(a.doctorProtect) ? a.doctorProtect : null;
+  const protectedId = doctor && !doctor.disabled && alive(a.doctorProtect) ? a.doctorProtect : null;
 
   // Attacks
   const attacks: { target: PlayerId; cause: Cause }[] = [];
@@ -154,6 +165,7 @@ export function resolveNight(
     investigation,
     stalkResult,
     disabledTarget,
+    habildarDisableUsed,
     bulletsSpent,
     habildarBulletsSpent,
     mafiaCancelled,

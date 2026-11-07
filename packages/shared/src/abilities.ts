@@ -35,21 +35,21 @@ export const ABILITIES: Record<string, AbilityDef> = {
     role: 'doctor',
     team: 'citizens',
     actionKind: 'protect',
-    disableable: false,
+    disableable: true,
   },
   policeShoot: {
     id: 'policeShoot',
     role: 'police',
     team: 'citizens',
     actionKind: 'shoot',
-    disableable: false,
+    disableable: true,
   },
   habildarShoot: {
     id: 'habildarShoot',
     role: 'habildar',
     team: 'citizens',
     actionKind: 'shoot',
-    disableable: false,
+    disableable: true,
     lifetimeLimit: 1,
   },
   habildarDisable: {
@@ -57,7 +57,7 @@ export const ABILITIES: Record<string, AbilityDef> = {
     role: 'habildar',
     team: 'citizens',
     actionKind: 'disable',
-    disableable: false,
+    disableable: true,
     cooldownRounds: 1,
   },
   investigate: {
@@ -97,6 +97,10 @@ export function getAbilityForRoleAndAction(
   actionKind: ActionKind,
 ): AbilityDef | undefined {
   return Object.values(ABILITIES).find((a) => a.role === role && a.actionKind === actionKind);
+}
+
+export function hasDisableableAbility(role: Role): boolean {
+  return Object.values(ABILITIES).some((a) => a.role === role && a.disableable);
 }
 
 export { isMafiaRole, teamForRole };

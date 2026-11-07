@@ -400,29 +400,130 @@ describe('resolveNight - NIGHT-01 suite', () => {
       expect(savedOutcome.habildarBulletsSpent).toBe(1);
     });
 
-    it('Habildar disable sets disabledTarget for mafia target, rejects citizen target', () => {
-      const players = [P('h', 'habildar'), P('k', 'killer'), P('c', 'citizen')];
-      // Target mafia
-      const outcomeMafia = resolveNight(
+    it('Habildar disable targets: disables special abilities of Doctor, Detective, Police, Silencer, Confuser, Stalker; silent no-effect on Killer, Citizen, Mayor; self-target rejected', () => {
+      const players = [
+        P('h', 'habildar'),
+        P('doc', 'doctor'),
+        P('det', 'detective'),
+        P('pol', 'police'),
+        P('sil', 'silencer'),
+        P('cf', 'confuser'),
+        P('st', 'stalker'),
+        P('k', 'killer'),
+        P('c', 'citizen'),
+        P('m', 'mayor'),
+      ];
+
+      // Disabling Doctor
+      const outcomeDoc = resolveNight(
+        players,
+        { ...baseActions, habildarAction: { kind: 'disable', targetId: 'doc' } },
+        0,
+        0,
+      );
+      expect(outcomeDoc.disabledTarget).toBe('doc');
+      expect(outcomeDoc.habildarDisableUsed).toBe(true);
+
+      // Disabling Detective
+      const outcomeDet = resolveNight(
+        players,
+        { ...baseActions, habildarAction: { kind: 'disable', targetId: 'det' } },
+        0,
+        0,
+      );
+      expect(outcomeDet.disabledTarget).toBe('det');
+      expect(outcomeDet.habildarDisableUsed).toBe(true);
+
+      // Disabling Police
+      const outcomePol = resolveNight(
+        players,
+        { ...baseActions, habildarAction: { kind: 'disable', targetId: 'pol' } },
+        0,
+        0,
+      );
+      expect(outcomePol.disabledTarget).toBe('pol');
+      expect(outcomePol.habildarDisableUsed).toBe(true);
+
+      // Disabling Silencer
+      const outcomeSil = resolveNight(
+        players,
+        { ...baseActions, habildarAction: { kind: 'disable', targetId: 'sil' } },
+        0,
+        0,
+      );
+      expect(outcomeSil.disabledTarget).toBe('sil');
+      expect(outcomeSil.habildarDisableUsed).toBe(true);
+
+      // Disabling Confuser
+      const outcomeCf = resolveNight(
+        players,
+        { ...baseActions, habildarAction: { kind: 'disable', targetId: 'cf' } },
+        0,
+        0,
+      );
+      expect(outcomeCf.disabledTarget).toBe('cf');
+      expect(outcomeCf.habildarDisableUsed).toBe(true);
+
+      // Disabling Stalker
+      const outcomeSt = resolveNight(
+        players,
+        { ...baseActions, habildarAction: { kind: 'disable', targetId: 'st' } },
+        0,
+        0,
+      );
+      expect(outcomeSt.disabledTarget).toBe('st');
+      expect(outcomeSt.habildarDisableUsed).toBe(true);
+
+      // Disabling Killer: produces no effect (kill cannot be disabled), identical feedback
+      const outcomeK = resolveNight(
         players,
         { ...baseActions, habildarAction: { kind: 'disable', targetId: 'k' } },
         0,
         0,
       );
-      expect(outcomeMafia.disabledTarget).toBe('k');
+      expect(outcomeK.disabledTarget).toBeNull();
+      expect(outcomeK.habildarDisableUsed).toBe(true);
 
-      // Target citizen
-      const outcomeCitizen = resolveNight(
+      // Disabling Citizen: produces no effect, identical feedback
+      const outcomeC = resolveNight(
         players,
         { ...baseActions, habildarAction: { kind: 'disable', targetId: 'c' } },
         0,
         0,
       );
-      expect(outcomeCitizen.disabledTarget).toBeNull();
+      expect(outcomeC.disabledTarget).toBeNull();
+      expect(outcomeC.habildarDisableUsed).toBe(true);
+
+      // Disabling Mayor: produces no effect, identical feedback
+      const outcomeM = resolveNight(
+        players,
+        { ...baseActions, habildarAction: { kind: 'disable', targetId: 'm' } },
+        0,
+        0,
+      );
+      expect(outcomeM.disabledTarget).toBeNull();
+      expect(outcomeM.habildarDisableUsed).toBe(true);
+
+      // Self-target rejected: no action used
+      const outcomeSelf = resolveNight(
+        players,
+        { ...baseActions, habildarAction: { kind: 'disable', targetId: 'h' } },
+        0,
+        0,
+      );
+      expect(outcomeSelf.disabledTarget).toBeNull();
+      expect(outcomeSelf.habildarDisableUsed).toBe(false);
     });
 
-    it('Disabled mafia roles (silencer, confuser, stalker) do not execute their actions; killer kill cannot be disabled', () => {
-      const disabledKiller: NightPlayer = { id: 'k', role: 'killer', alive: true, disabled: true };
+    it('Disabled citizen roles (doctor, detective, police) and disabled mafia roles do not execute actions', () => {
+      const disabledDoc: NightPlayer = { id: 'doc', role: 'doctor', alive: true, disabled: true };
+      const disabledDet: NightPlayer = {
+        id: 'det',
+        role: 'detective',
+        alive: true,
+        disabled: true,
+      };
+      const disabledPol: NightPlayer = { id: 'pol', role: 'police', alive: true, disabled: true };
       const disabledSilencer: NightPlayer = {
         id: 's',
         role: 'silencer',
@@ -441,33 +542,37 @@ describe('resolveNight - NIGHT-01 suite', () => {
         alive: true,
         disabled: true,
       };
-      const det: NightPlayer = { id: 'd', role: 'detective', alive: true };
+      const killer: NightPlayer = { id: 'k', role: 'killer', alive: true };
       const citizen: NightPlayer = { id: 'c', role: 'citizen', alive: true };
 
       const players = [
-        disabledKiller,
+        disabledDoc,
+        disabledDet,
+        disabledPol,
         disabledSilencer,
         disabledConfuser,
         disabledStalker,
-        det,
+        killer,
         citizen,
       ];
       const actions: NightActions = {
         killerPicks: { k: 'c' },
-        doctorProtect: null,
-        policeShot: null,
-        detectiveTarget: 'cf',
+        doctorProtect: 'c', // disabled doctor tries to protect c
+        policeShot: 'k', // disabled police tries to shoot k
+        detectiveTarget: 'k', // disabled detective tries to investigate k
         confuserTarget: 'c',
         silencerTarget: 'c',
         stalkerTarget: 'c',
       };
 
-      const outcome = resolveNight(players, actions, 0, 0);
+      const outcome = resolveNight(players, actions, 2, 0);
+      // Citizen c is killed because disabled doctor did NOT protect c
       expect(outcome.deaths).toEqual([{ id: 'c', causes: ['mafia'] }]);
-      expect(outcome.silenced).toBeNull(); // Disabled silencer does not silence
-      expect(outcome.stalkResult).toBeNull(); // Disabled stalker does not check
-      // Detective checks disabled confuser (who is mafia) => result is mafia (confuser didn't frame)
-      expect(outcome.investigation?.result).toBe('mafia');
+      expect(outcome.saves).toHaveLength(0);
+      expect(outcome.bulletsSpent).toBe(0); // disabled police did not shoot
+      expect(outcome.investigation).toBeNull(); // disabled detective did not investigate
+      expect(outcome.silenced).toBeNull(); // disabled silencer did not silence
+      expect(outcome.stalkResult).toBeNull(); // disabled stalker did not check
     });
 
     it('Stalker reveals exact role id of Citizen target', () => {

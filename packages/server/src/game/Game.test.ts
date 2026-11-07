@@ -329,4 +329,70 @@ describe('GAME State Machine & Rules', () => {
     const secondSubmit = game.submitAction(stalker.id, 'stalk', citizen.id);
     expect(secondSubmit).toEqual({ error: 'limitReached' });
   });
+
+  it('Constable disable: targets any alive player except self; disables special abilities; silent no-effect on Citizen/Killer with identical cooldown', () => {
+    const { game, players } = setupGameWithRoles(6);
+    const constable = players[0];
+    const doctor = players[1];
+    const killer = players[2];
+    const citizen = players[3];
+    const mayor = players[4];
+
+    constable.role = 'habildar';
+    doctor.role = 'doctor';
+    killer.role = 'killer';
+    citizen.role = 'citizen';
+    mayor.role = 'mayor';
+
+    game.phase = 'night';
+    game.round = 1;
+
+    // Self-target rejected
+    const selfRes = game.submitAction(constable.id, 'disable', constable.id);
+    expect(selfRes).toEqual({ error: 'invalidTarget' });
+
+    // Targeting Doctor (Citizen with disableable ability) is allowed
+    const docRes = game.submitAction(constable.id, 'disable', doctor.id);
+    expect(docRes).toEqual({ ok: true });
+
+    // Allowed targets returns all alive other players
+    const allowed = game.getAllowedTargets(constable.id);
+    expect(allowed).toContain(doctor.id);
+    expect(allowed).toContain(killer.id);
+    expect(allowed).toContain(citizen.id);
+    expect(allowed).toContain(mayor.id);
+    expect(allowed).not.toContain(constable.id);
+
+    // Resolve night with Constable disabling Doctor
+    (game as unknown as { resolveNightPhase: () => void }).resolveNightPhase();
+
+    // Doctor is disabled until round 3 (round 1 + 2)
+    const docAbility = game.getAbilityState(doctor.id);
+    expect(docAbility.disabledUntilRound).toBe(3);
+
+    // Constable cooldown is round 3
+    const conAbility = game.getAbilityState(constable.id);
+    expect(conAbility.cooldownUntilRound['disable']).toBe(3);
+
+    // In round 2, Doctor is disabled and cannot protect
+    game.round = 2;
+    game.phase = 'night';
+    const docSubmitDisabled = game.submitAction(doctor.id, 'protect', citizen.id);
+    expect(docSubmitDisabled).toEqual({ error: 'abilityUnavailable' });
+    expect(game.getAllowedTargets(doctor.id)).toHaveLength(0);
+
+    // Test targeting Killer / Citizen in next night (when cooldown expires at round 3)
+    game.round = 3;
+    const conAbility3 = game.getAbilityState(constable.id);
+    conAbility3.cooldownUntilRound['disable'] = 0; // ready
+    const targetKillerRes = game.submitAction(constable.id, 'disable', killer.id);
+    expect(targetKillerRes).toEqual({ ok: true });
+
+    // Night resolution: Killer has no disableable ability, so killer disabledUntilRound stays 0
+    (game as unknown as { resolveNightPhase: () => void }).resolveNightPhase();
+    const killerState = game.getAbilityState(killer.id);
+    expect(killerState.disabledUntilRound).toBe(0); // silent no-effect
+    // But Constable still gets cooldown applied
+    expect(conAbility3.cooldownUntilRound['disable']).toBe(5);
+  });
 });

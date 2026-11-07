@@ -519,11 +519,7 @@ export class Game {
         return { error: 'invalidTarget' };
       }
 
-      if (role === 'habildar' && kind === 'disable') {
-        if (!target.role || !isMafiaRole(target.role)) {
-          return { error: 'invalidTarget' };
-        }
-      } else if (role === 'stalker' && kind === 'stalk') {
+      if (role === 'stalker' && kind === 'stalk') {
         if (!target.role || isMafiaRole(target.role) || targetId === callerId) {
           return { error: 'invalidTarget' };
         }
@@ -653,11 +649,13 @@ export class Game {
     }
 
     // Habildar disable target
-    if (outcome.disabledTarget && habildarPlayer) {
+    if (outcome.habildarDisableUsed && habildarPlayer) {
       const hs = this.getAbilityState(habildarPlayer.id);
       hs.cooldownUntilRound['disable'] = this.round + 2;
-      const targetState = this.getAbilityState(outcome.disabledTarget);
-      targetState.disabledUntilRound = this.round + 2;
+      if (outcome.disabledTarget) {
+        const targetState = this.getAbilityState(outcome.disabledTarget);
+        targetState.disabledUntilRound = this.round + 2;
+      }
     }
 
     // Record detective investigation privately and count use
@@ -930,8 +928,10 @@ export class Game {
         case 'killer':
           return aliveOthers;
         case 'doctor':
+          if (isActorDisabled) return [];
           return this.getAlivePlayers().map((p) => p.id); // self allowed
         case 'police':
+          if (isActorDisabled) return [];
           if (this.policeBullets <= 0) return [];
           return aliveOthers;
         case 'detective':
@@ -945,6 +945,7 @@ export class Game {
           if (isActorDisabled) return [];
           return aliveOthers;
         case 'habildar':
+          if (isActorDisabled) return [];
           return aliveOthers;
         case 'stalker':
           if ((abilityState.used['stalk'] ?? 0) >= 1) return [];
