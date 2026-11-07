@@ -26,37 +26,37 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({ isOpen, onClose 
   const citizenRoles: { role: Role; title: string; desc: string; tip: string }[] = [
     {
       role: 'doctor',
-      title: 'ডাক্তার (Doctor)',
+      title: 'ডাক্তার',
       desc: 'প্রতি রাতে যেকোনো একজন খেলোয়াড়কে মাফিয়া বা পুলিশের আক্রমণ থেকে বাঁচাতে পারেন (নিজেকেও বাঁচাতে পারেন)।',
       tip: 'গুরুত্বপূর্ণ খেলোয়াড়দের অনুমান করে বাঁচান।',
     },
     {
       role: 'detective',
-      title: 'গোয়েন্দা (Detective)',
+      title: 'গোয়েন্দা',
       desc: 'প্রতি রাতে গোপনে যেকোনো ১ জন খেলোয়াড়ের আসল ভূমিকা তদন্ত করে জেনে নিতে পারেন (গেমে সর্বোচ্চ ২ বার)।',
       tip: 'তদন্তের সঠিক তথ্য দিনের আলোচনায় চতুরতার সাথে প্রকাশ করুন।',
     },
     {
       role: 'police',
-      title: 'পুলিশ (Police)',
+      title: 'পুলিশ',
       desc: 'প্রতি রাতে অপরাধী মনে হলে নিজের সিদ্ধান্তে যেকোনো খেলোয়াড়কে সরাসরি গুলি করে হত্যা করতে পারেন।',
       tip: 'সতর্ক থাকুন, ভুল করে নির্দোষ নাগরিক হত্যা করবেন না!',
     },
     {
       role: 'habildar',
-      title: 'হাবিলদার (Habildar)',
+      title: 'হাবিলদার',
       desc: 'যেকোনো জীবিত খেলোয়াড়কে টার্গেট করে পরবর্তী রাতের জন্য তার বিশেষ ক্ষমতা অকার্যকর করে দিতে পারেন।',
       tip: 'মাফিয়াদের বিশেষ কৌশল ভণ্ডুল করতে এটি দারুণ কার্যকর।',
     },
     {
       role: 'mayor',
-      title: 'মেয়র (Mayor)',
+      title: 'মেয়র',
       desc: 'দিনের ভোটে যদি সমতা (Tie) হয়, তবে মেয়রের ভোট বা সিদ্ধান্তেই চূড়ান্ত ব্যক্তি বাদ পড়বেন।',
       tip: 'দিনের বেলা বুদ্ধিদীপ্ত নেতৃত্ব দিন।',
     },
     {
       role: 'citizen',
-      title: 'সাধারণ নাগরিক (Citizen)',
+      title: 'সাধারণ নাগরিক',
       desc: 'রাতে কোনো বিশেষ ক্ষমতা নেই। তবে দিনের আলোচনা ও যুক্তিপূর্ণ ভোটের মাধ্যমে মাফিয়া খুঁজে বের করাই আপনার শক্তি।',
       tip: 'কারো কথায় অসঙ্গতি লক্ষ্য করুন এবং সন্দেহভাজনকে চিহ্নিত করুন।',
     },
@@ -65,25 +65,25 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({ isOpen, onClose 
   const mafiaRoles: { role: Role; title: string; desc: string; tip: string }[] = [
     {
       role: 'killer',
-      title: 'খুনি (Killer)',
+      title: 'খুনি',
       desc: 'মাফিয়া দলের প্রধান ঘাতক। প্রতি রাতে মাফিয়াদের সিক্রেট ভয়েস রুমে পরামর্শ করে একজনকে হত্যার নিশানা করেন।',
       tip: 'ডাক্তার বা গোয়েন্দাকে আগে নির্মূল করার চেষ্টা করুন।',
     },
     {
       role: 'silencer',
-      title: 'নিস্তব্ধকারী (Silencer)',
+      title: 'নিস্তব্ধকারী',
       desc: 'প্রতি রাতে ১ জন নাগরিককে নিশানা করে পরদিনের জন্য তার ভয়েস ও চ্যাটে কথা বলার ক্ষমতা বন্ধ করে দিতে পারেন।',
       tip: 'যে নাগরিক ভালো যুক্তি দিচ্ছে বা গোয়েন্দা তথ্য দিচ্ছে, তাকে চুপ করিয়ে দিন।',
     },
     {
       role: 'confuser',
-      title: 'বিভ্রান্তকারী (Confuser)',
+      title: 'বিভ্রান্তকারী',
       desc: 'গোয়েন্দা যাতে মাফিয়ার আসল পরিচয় সহজে শনাক্ত করতে না পারে, সেজন্য তদন্তে বিভ্রান্তি ছড়িয়ে নিরীহ দেখান।',
       tip: 'গোয়েন্দার তদন্ত লক্ষ্য করে দলের সতীর্থকে সুরক্ষিত রাখুন।',
     },
     {
       role: 'stalker',
-      title: 'অনুসরণকারী (Stalker)',
+      title: 'অনুসরণকারী',
       desc: 'গেমে একবার যেকোনো ১ জন সাধারণ নাগরিককে গোপনে যাচাই করে নিশ্চিত হতে পারেন।',
       tip: 'নাগরিকদের মধ্য থেকে ভুয়া পরিচয় ধরতে সাহায্য করে।',
     },
@@ -182,7 +182,7 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({ isOpen, onClose 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="p-4 rounded-2xl bg-indigo-950/30 border border-indigo-800/40 space-y-2">
                   <div className="flex items-center gap-2 text-indigo-300 font-bold text-sm">
-                    <Moon className="w-4 h-4" /> রাত পর্ব (Night Phase)
+                    <Moon className="w-4 h-4" /> রাত পর্ব
                   </div>
                   <ul className="text-xs text-slate-300 space-y-1.5 list-disc list-inside">
                     <li>শহর অন্ধকার হবে এবং সাধারণ নাগরিকরা ঘুমিয়ে থাকবে।</li>
@@ -193,7 +193,7 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({ isOpen, onClose 
 
                 <div className="p-4 rounded-2xl bg-amber-950/30 border border-amber-800/40 space-y-2">
                   <div className="flex items-center gap-2 text-amber-300 font-bold text-sm">
-                    <Sun className="w-4 h-4" /> দিন ও ভোট পর্ব (Day & Voting)
+                    <Sun className="w-4 h-4" /> দিন ও ভোট পর্ব
                   </div>
                   <ul className="text-xs text-slate-300 space-y-1.5 list-disc list-inside">
                     <li>ভোরে রাতের ফলাফল উন্মোচিত হবে।</li>
