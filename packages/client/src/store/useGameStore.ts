@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { io, type Socket } from 'socket.io-client';
 import type { ActionKind, ClientState, RoomSettings } from '@ontorale/shared';
+import { useVoiceStore } from './useVoiceStore';
 
 export interface ChatMessage {
   id: string;
@@ -38,6 +39,7 @@ interface GameStore {
   castVote: (targetId: string | null) => Promise<{ ok: boolean; error?: string }>;
   mayorDecide: (targetId: string | null) => Promise<{ ok: boolean; error?: string }>;
   sendChat: (channel: 'public' | 'mafia', text: string) => Promise<{ ok: boolean; error?: string }>;
+  leaveRoom: () => Promise<void>;
   clearError: () => void;
 }
 
@@ -310,5 +312,24 @@ export const useGameStore = create<GameStore>((set, get) => ({
         else resolve({ ok: false, error: res.error });
       });
     });
+  },
+
+  leaveRoom: async () => {
+    const s = get().socket;
+    if (s && s.connected) {
+      s.emit('room:leave', {});
+    }
+    sessionStorage.removeItem('ontorale_session_token');
+    sessionStorage.removeItem('ontorale_room_code');
+    sessionStorage.removeItem('ontorale_player_id');
+    set({
+      sessionToken: null,
+      roomCode: null,
+      playerId: null,
+      state: null,
+      chatMessages: [],
+      error: null,
+    });
+    useVoiceStore.getState().resetVoice();
   },
 }));

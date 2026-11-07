@@ -3,7 +3,9 @@ import { Countdown } from './Countdown';
 import { VoiceControls } from './VoiceControls';
 import { VoiceErrorBoundary } from './VoiceErrorBoundary';
 import { useVoiceStore } from '../store/useVoiceStore';
+import { useGameStore } from '../store/useGameStore';
 import { t, setLocale, getLocale } from '../i18n';
+import { LogOut } from 'lucide-react';
 import type { Phase } from '@ontorale/shared';
 
 interface HeaderProps {
@@ -28,10 +30,17 @@ export const Header: React.FC<HeaderProps> = ({
   silenced = false,
 }) => {
   const currentLang = getLocale();
+  const { leaveRoom } = useGameStore();
 
   const toggleLanguage = () => {
     setLocale(currentLang === 'bn' ? 'en' : 'bn');
     window.location.reload();
+  };
+
+  const handleLeave = () => {
+    if (window.confirm('আপনি কি নিশ্চিত যে আপনি রুম ত্যাগ করতে চান?')) {
+      leaveRoom();
+    }
   };
 
   return (
@@ -85,6 +94,15 @@ export const Header: React.FC<HeaderProps> = ({
             className="text-xs text-slate-400 hover:text-white border border-slate-700 px-2 py-1 rounded transition"
           >
             {currentLang === 'bn' ? 'English' : 'বাংলা'}
+          </button>
+
+          <button
+            onClick={handleLeave}
+            className="text-xs text-slate-400 hover:text-rose-400 border border-slate-700 hover:border-rose-500/50 px-2 py-1 rounded transition flex items-center gap-1"
+            title="রুম ত্যাগ করুন"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">ত্যাগ করুন</span>
           </button>
         </div>
       </div>

@@ -3,7 +3,7 @@ import type { ClientState, Role } from '@ontorale/shared';
 import { isMafiaRole } from '@ontorale/shared';
 import { useGameStore } from '../store/useGameStore';
 import { t } from '../i18n';
-import { Trophy, RotateCcw, Users } from 'lucide-react';
+import { Trophy, RotateCcw, Users, LogOut } from 'lucide-react';
 import { RoleAvatar } from '../components/RoleAvatar';
 import { EventLog } from '../components/EventLog';
 
@@ -12,7 +12,7 @@ interface GameOverProps {
 }
 
 export const GameOver: React.FC<GameOverProps> = ({ state }) => {
-  const { rematch } = useGameStore();
+  const { rematch, leaveRoom } = useGameStore();
   const { winner, allRoles, players, me, log } = state;
   const isHost = me.isHost;
 
@@ -86,8 +86,8 @@ export const GameOver: React.FC<GameOverProps> = ({ state }) => {
           <EventLog log={log} playersMap={playerMap} />
         </div>
 
-        {/* Rematch Button for Host */}
-        <div className="pt-2">
+        {/* Actions */}
+        <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
           {isHost ? (
             <button
               data-testid="rematch"
@@ -97,10 +97,18 @@ export const GameOver: React.FC<GameOverProps> = ({ state }) => {
               <RotateCcw className="w-5 h-5" /> {t('ui.rematch')}
             </button>
           ) : (
-            <p className="text-xs text-slate-400 italic">
+            <p className="w-full text-xs text-slate-400 italic mb-2">
               হোস্ট পুনরায় খেলার জন্য অপেক্ষা করা হচ্ছে...
             </p>
           )}
+
+          <button
+            onClick={() => leaveRoom()}
+            className="w-full sm:w-auto px-6 py-3.5 rounded-xl border border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-slate-300 font-bold transition inline-flex items-center justify-center gap-2 text-base"
+          >
+            <LogOut className="w-4 h-4" />
+            <span>রুম ত্যাগ করুন</span>
+          </button>
         </div>
       </div>
     </div>

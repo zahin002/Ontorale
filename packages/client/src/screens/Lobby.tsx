@@ -2,7 +2,7 @@ import React from 'react';
 import type { ClientState, RoomSettings } from '@ontorale/shared';
 import { useGameStore } from '../store/useGameStore';
 import { t } from '../i18n';
-import { Users, Settings, Play, ShieldAlert, Copy, Check } from 'lucide-react';
+import { Users, Settings, Play, ShieldAlert, Copy, Check, ArrowLeft } from 'lucide-react';
 import { ChatPanel } from '../components/ChatPanel';
 import { VoiceControls } from '../components/VoiceControls';
 import { VoiceErrorBoundary } from '../components/VoiceErrorBoundary';
@@ -13,7 +13,7 @@ interface LobbyProps {
 }
 
 export const Lobby: React.FC<LobbyProps> = ({ state }) => {
-  const { startGame, updateSettings, connected } = useGameStore();
+  const { startGame, updateSettings, leaveRoom, connected } = useGameStore();
   const [copied, setCopied] = React.useState(false);
 
   const { players, me, roomCode, settings, validPlayerCounts } = state;
@@ -48,24 +48,39 @@ export const Lobby: React.FC<LobbyProps> = ({ state }) => {
 
       {/* Header Info */}
       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <span className="text-xs uppercase tracking-wider text-slate-400 font-bold block mb-1">
-            {t('ui.roomCode')}
-          </span>
-          <div className="flex items-center gap-3">
-            <span
-              data-testid="room-code"
-              className="text-3xl font-black font-mono tracking-widest text-rose-500 bg-slate-950 px-4 py-1.5 rounded-xl border border-slate-800"
-            >
-              {roomCode}
+        <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
+          <button
+            onClick={() => leaveRoom()}
+            className="px-3 py-2 rounded-xl bg-slate-800/80 hover:bg-rose-950/60 hover:border-rose-500/50 hover:text-rose-300 text-slate-300 border border-slate-700 transition flex items-center gap-1.5 text-xs font-semibold shadow"
+            title="রুম ত্যাগ করুন (Back to Home)"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>পেছনে যান</span>
+          </button>
+
+          <div>
+            <span className="text-xs uppercase tracking-wider text-slate-400 font-bold block mb-1">
+              {t('ui.roomCode')}
             </span>
-            <button
-              onClick={handleCopyCode}
-              className="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition"
-              title="Copy Room Code"
-            >
-              {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
-            </button>
+            <div className="flex items-center gap-3">
+              <span
+                data-testid="room-code"
+                className="text-3xl font-black font-mono tracking-widest text-rose-500 bg-slate-950 px-4 py-1.5 rounded-xl border border-slate-800"
+              >
+                {roomCode}
+              </span>
+              <button
+                onClick={handleCopyCode}
+                className="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition"
+                title="Copy Room Code"
+              >
+                {copied ? (
+                  <Check className="w-4 h-4 text-green-400" />
+                ) : (
+                  <Copy className="w-4 h-4" />
+                )}
+              </button>
+            </div>
           </div>
         </div>
 
