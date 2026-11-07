@@ -437,6 +437,10 @@ export function registerSocketHandlers(
         return ack({ ok: false, error: 'voiceUnavailable' });
       }
 
+      if (!socketData.rateLimiter.checkVoice()) {
+        return ack({ ok: false, error: 'rateLimited' });
+      }
+
       const parsed = VoiceTokenSchema.safeParse(payload);
       if (!parsed.success) {
         return ack({ ok: false, error: 'badRequest' });

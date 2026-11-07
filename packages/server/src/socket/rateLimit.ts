@@ -43,6 +43,7 @@ export const ipRoomCreateLimiter = new SlidingWindowRateLimiter(3, 60_000); // 3
 export class SocketRateLimiter {
   private chatLimiter = new SlidingWindowRateLimiter(5, 5_000); // 5 messages per 5s
   private actionLimiter = new SlidingWindowRateLimiter(20, 10_000); // 20 actions/votes per 10s
+  private voiceLimiter = new SlidingWindowRateLimiter(6, 10_000); // 6 voice token requests per 10s
 
   checkChat(now?: number): boolean {
     return this.chatLimiter.check('chat', now);
@@ -50,5 +51,9 @@ export class SocketRateLimiter {
 
   checkAction(now?: number): boolean {
     return this.actionLimiter.check('action', now);
+  }
+
+  checkVoice(now?: number): boolean {
+    return this.voiceLimiter.check('voice', now);
   }
 }

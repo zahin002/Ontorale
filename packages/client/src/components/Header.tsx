@@ -1,6 +1,8 @@
 import React from 'react';
 import { Countdown } from './Countdown';
 import { VoiceControls } from './VoiceControls';
+import { VoiceErrorBoundary } from './VoiceErrorBoundary';
+import { useVoiceStore } from '../store/useVoiceStore';
 import { t, setLocale, getLocale } from '../i18n';
 import type { Phase } from '@ontorale/shared';
 
@@ -68,13 +70,15 @@ export const Header: React.FC<HeaderProps> = ({
 
           <Countdown phaseEndsAt={phaseEndsAt} serverNow={serverNow} />
 
-          <VoiceControls
-            roomCode={roomCode}
-            phase={phase}
-            alive={alive}
-            isMafia={isMafia}
-            silenced={silenced}
-          />
+          <VoiceErrorBoundary onRetry={() => useVoiceStore.getState().retryConnection()}>
+            <VoiceControls
+              roomCode={roomCode}
+              phase={phase}
+              alive={alive}
+              isMafia={isMafia}
+              silenced={silenced}
+            />
+          </VoiceErrorBoundary>
 
           <button
             onClick={toggleLanguage}

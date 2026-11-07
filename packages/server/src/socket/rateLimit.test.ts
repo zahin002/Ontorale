@@ -30,4 +30,18 @@ describe('rateLimit module', () => {
     // 21st action in window -> blocked
     expect(sockLimiter.checkAction(now)).toBe(false);
   });
+
+  it('checks socket voice token request limit (6 per 10s)', () => {
+    const sockLimiter = new SocketRateLimiter();
+    const now = 10_000;
+
+    for (let i = 0; i < 6; i++) {
+      expect(sockLimiter.checkVoice(now)).toBe(true);
+    }
+    // 7th token request in window -> rate limited
+    expect(sockLimiter.checkVoice(now)).toBe(false);
+
+    // After window expires -> allowed again
+    expect(sockLimiter.checkVoice(now + 10_001)).toBe(true);
+  });
 });
