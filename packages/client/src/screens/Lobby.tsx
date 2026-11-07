@@ -69,16 +69,21 @@ export const Lobby: React.FC<LobbyProps> = ({ state }) => {
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
-          <VoiceErrorBoundary onRetry={() => useVoiceStore.getState().retryConnection()}>
-            <VoiceControls
-              roomCode={roomCode}
-              phase="lobby"
-              alive={true}
-              isMafia={false}
-              silenced={false}
-            />
-          </VoiceErrorBoundary>
+        <div className="flex items-center flex-wrap gap-4">
+          <div className="bg-slate-950/80 border border-slate-800 px-3 py-2 rounded-xl flex items-center gap-2 shadow-inner">
+            <span className="text-xs text-slate-400 font-semibold hidden sm:inline">
+              ভয়েস চ্যাট:
+            </span>
+            <VoiceErrorBoundary onRetry={() => useVoiceStore.getState().retryConnection()}>
+              <VoiceControls
+                roomCode={roomCode}
+                phase="lobby"
+                alive={true}
+                isMafia={false}
+                silenced={false}
+              />
+            </VoiceErrorBoundary>
+          </div>
 
           <div className="text-right">
             <div className="text-sm font-semibold text-slate-300 flex items-center gap-1.5 justify-end">
