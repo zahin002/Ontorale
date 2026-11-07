@@ -6,6 +6,7 @@ import {
   Track,
   createLocalAudioTrack,
   LocalAudioTrack,
+  RemoteTrack,
 } from 'livekit-client';
 import { useGameStore } from '../store/useGameStore';
 import { useVoiceStore } from '../store/useVoiceStore';
@@ -136,6 +137,20 @@ export const VoiceControls: React.FC<VoiceControlsProps> = ({
             setIsSpeaking(meSpeaking);
           });
 
+          room.on(RoomEvent.TrackSubscribed, (track: RemoteTrack) => {
+            if (!active) return;
+            if (track.kind === Track.Kind.Audio) {
+              const audioElement = track.attach();
+              document.body.appendChild(audioElement);
+            }
+          });
+
+          room.on(RoomEvent.TrackUnsubscribed, (track: RemoteTrack) => {
+            if (track.kind === Track.Kind.Audio) {
+              track.detach().forEach((el) => el.remove());
+            }
+          });
+
           room.on(RoomEvent.ConnectionStateChanged, (state) => {
             if (!active) return;
             if (state === ConnectionState.Connecting) {
@@ -163,6 +178,15 @@ export const VoiceControls: React.FC<VoiceControlsProps> = ({
               room.disconnect();
               return;
             }
+            // Attach existing remote audio tracks
+            room.remoteParticipants.forEach((p) => {
+              p.trackPublications.forEach((pub) => {
+                if (pub.track && pub.track.kind === Track.Kind.Audio) {
+                  const audioElement = pub.track.attach();
+                  document.body.appendChild(audioElement);
+                }
+              });
+            });
             setPubRoom(room);
             setVoiceStatus('connected');
             if (!room.canPlaybackAudio) {
@@ -198,6 +222,20 @@ export const VoiceControls: React.FC<VoiceControlsProps> = ({
               dynacast: true,
             });
 
+            mRoom.on(RoomEvent.TrackSubscribed, (track: RemoteTrack) => {
+              if (!active) return;
+              if (track.kind === Track.Kind.Audio) {
+                const audioElement = track.attach();
+                document.body.appendChild(audioElement);
+              }
+            });
+
+            mRoom.on(RoomEvent.TrackUnsubscribed, (track: RemoteTrack) => {
+              if (track.kind === Track.Kind.Audio) {
+                track.detach().forEach((el) => el.remove());
+              }
+            });
+
             mRoom.on(RoomEvent.AudioPlaybackStatusChanged, () => {
               if (!active) return;
               if (!mRoom.canPlaybackAudio) {
@@ -211,6 +249,15 @@ export const VoiceControls: React.FC<VoiceControlsProps> = ({
                 mRoom.disconnect();
                 return;
               }
+              // Attach existing remote audio tracks in mafia room
+              mRoom.remoteParticipants.forEach((p) => {
+                p.trackPublications.forEach((pub) => {
+                  if (pub.track && pub.track.kind === Track.Kind.Audio) {
+                    const audioElement = pub.track.attach();
+                    document.body.appendChild(audioElement);
+                  }
+                });
+              });
               setMafRoom(mRoom);
               socket.emit('voice:ready', { channel: 'mafia' });
             }
@@ -224,8 +271,19 @@ export const VoiceControls: React.FC<VoiceControlsProps> = ({
     return () => {
       active = false;
       stopAllTracks();
-      pubRoom?.disconnect();
-      mafRoom?.disconnect();
+      const detachAndDisconnect = (r: Room | null) => {
+        if (!r) return;
+        r.remoteParticipants.forEach((p) => {
+          p.trackPublications.forEach((pub) => {
+            if (pub.track) {
+              pub.track.detach().forEach((el) => el.remove());
+            }
+          });
+        });
+        r.disconnect();
+      };
+      detachAndDisconnect(pubRoom);
+      detachAndDisconnect(mafRoom);
     };
   }, [
     socket,
