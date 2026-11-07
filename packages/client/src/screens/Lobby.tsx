@@ -4,6 +4,9 @@ import { useGameStore } from '../store/useGameStore';
 import { t } from '../i18n';
 import { Users, Settings, Play, ShieldAlert, Copy, Check } from 'lucide-react';
 import { ChatPanel } from '../components/ChatPanel';
+import { VoiceControls } from '../components/VoiceControls';
+import { VoiceErrorBoundary } from '../components/VoiceErrorBoundary';
+import { useVoiceStore } from '../store/useVoiceStore';
 
 interface LobbyProps {
   state: ClientState;
@@ -66,9 +69,21 @@ export const Lobby: React.FC<LobbyProps> = ({ state }) => {
           </div>
         </div>
 
-        <div className="text-right">
-          <div className="text-sm font-semibold text-slate-300 flex items-center gap-1.5 justify-end">
-            <Users className="w-4 h-4 text-rose-400" /> {playerCount} / 15 খেলোয়াড়
+        <div className="flex items-center gap-4">
+          <VoiceErrorBoundary onRetry={() => useVoiceStore.getState().retryConnection()}>
+            <VoiceControls
+              roomCode={roomCode}
+              phase="lobby"
+              alive={true}
+              isMafia={false}
+              silenced={false}
+            />
+          </VoiceErrorBoundary>
+
+          <div className="text-right">
+            <div className="text-sm font-semibold text-slate-300 flex items-center gap-1.5 justify-end">
+              <Users className="w-4 h-4 text-rose-400" /> {playerCount} / 15 খেলোয়াড়
+            </div>
           </div>
         </div>
       </div>

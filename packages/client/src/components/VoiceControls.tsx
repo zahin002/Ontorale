@@ -42,17 +42,17 @@ export const VoiceControls: React.FC<VoiceControlsProps> = ({
     retryConnection,
   } = useVoiceStore();
 
+  const isDebugMode =
+    typeof window !== 'undefined' && window.location.search.includes('voicedebug=1');
+
   const [pubRoom, setPubRoom] = useState<Room | null>(null);
   const [mafRoom, setMafRoom] = useState<Room | null>(null);
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const [showDebugPanel, setShowDebugPanel] = useState(false);
+  const [showDebugPanel, setShowDebugPanel] = useState(isDebugMode);
 
   const lastClickRef = useRef<number>(0);
   const localAudioTrackRef = useRef<LocalAudioTrack | null>(null);
   const mafiaAudioTrackRef = useRef<LocalAudioTrack | null>(null);
-
-  const isDebugMode =
-    typeof window !== 'undefined' && window.location.search.includes('voicedebug=1');
 
   // Determine speaking permissions
   const canPublishInPub =
@@ -411,8 +411,29 @@ export const VoiceControls: React.FC<VoiceControlsProps> = ({
     setPermissionDenied,
   ]);
 
-  if (voiceStatus === 'unsupported' && !isDebugMode) {
-    return null;
+  if (voiceStatus === 'unsupported') {
+    return (
+      <div className="flex items-center gap-2 relative">
+        <div
+          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-500 text-xs"
+          title="ভয়েস চ্যাট এই মুহূর্তে অনুপলব্ধ (LiveKit কনফিগারেশন অনুপস্থিত বা সংযোগ ব্যর্থ)"
+        >
+          <MicOff className="w-3.5 h-3.5 text-slate-600" />
+          <span>ভয়েস বন্ধ</span>
+        </div>
+        {isDebugMode && (
+          <div className="absolute right-0 top-10 w-64 p-3 bg-slate-950/95 border border-amber-500/50 rounded-lg shadow-2xl text-[11px] text-slate-300 font-mono z-50 backdrop-blur-sm">
+            <div className="font-bold text-amber-400 mb-1 border-b border-amber-500/30 pb-1">
+              ভয়েস ডায়াগনস্টিক (?voicedebug=1)
+            </div>
+            <div className="text-amber-300">Status: unsupported</div>
+            <div className="text-[10px] text-slate-400 mt-1">
+              সার্ভারে LIVEKIT_URL কনফিগার করা নেই অথবা ব্রাউজার মিডিয়া ডিভাইস সাপোর্ট করছে না।
+            </div>
+          </div>
+        )}
+      </div>
+    );
   }
 
   // Handle user toggle mic
