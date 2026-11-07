@@ -461,9 +461,21 @@ export function registerSocketHandlers(
         }
       }
 
+      const canPublishNow =
+        channel === 'public'
+          ? (game.phase === 'lobby' || game.phase === 'discussion' || game.phase === 'gameOver') &&
+            player.status !== 'dead' &&
+            !player.silenced
+          : isMafia && player.status === 'alive' && game.phase === 'night';
+
       try {
         const roomName = `ontorale-${game.roomCode}-${channel === 'public' ? 'pub' : 'maf'}`;
-        const tokenRes = await game.voiceProvider.issueToken(roomName, player.id, player.nickname);
+        const tokenRes = await game.voiceProvider.issueToken(
+          roomName,
+          player.id,
+          player.nickname,
+          canPublishNow,
+        );
         ack({ ok: true, data: tokenRes });
       } catch {
         ack({ ok: false, error: 'voiceUnavailable' });

@@ -316,6 +316,31 @@ export const VoiceControls: React.FC<VoiceControlsProps> = ({
     };
   }, [pubRoom, mafRoom]);
 
+  // Auto-unlock audio playback on any user interaction (click/touch anywhere on screen)
+  useEffect(() => {
+    const handleInteraction = () => {
+      if (pubRoom && !pubRoom.canPlaybackAudio) {
+        pubRoom
+          .startAudio()
+          .then(() => setAudioPlaybackBlocked(false))
+          .catch(() => {});
+      }
+      if (mafRoom && !mafRoom.canPlaybackAudio) {
+        mafRoom
+          .startAudio()
+          .then(() => setAudioPlaybackBlocked(false))
+          .catch(() => {});
+      }
+    };
+
+    window.addEventListener('click', handleInteraction, { passive: true });
+    window.addEventListener('touchstart', handleInteraction, { passive: true });
+    return () => {
+      window.removeEventListener('click', handleInteraction);
+      window.removeEventListener('touchstart', handleInteraction);
+    };
+  }, [pubRoom, mafRoom, setAudioPlaybackBlocked]);
+
   // Audio track publish synchronization
   useEffect(() => {
     let cancelled = false;

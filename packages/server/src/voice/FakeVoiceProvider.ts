@@ -13,13 +13,14 @@ export class FakeVoiceProvider implements VoiceProvider {
     room: string,
     identity: string,
     name: string,
+    canPublish: boolean = true,
   ): Promise<{ url: string; token: string }> {
     if (!this.rooms.has(room)) {
       this.rooms.set(room, new Map());
     }
     const r = this.rooms.get(room)!;
     if (!r.has(identity)) {
-      r.set(identity, { identity, name, canPublish: false });
+      r.set(identity, { identity, name, canPublish });
     }
     return {
       url: 'fake://livekit',

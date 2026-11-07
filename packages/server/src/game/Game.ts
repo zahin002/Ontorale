@@ -1010,12 +1010,16 @@ export class Game {
           mafPublish = aliveMafiaIds.has(player.id);
         }
 
-        await this.voiceProvider.setCanPublish(pubRoom, player.id, pubPublish);
+        try {
+          await this.voiceProvider.setCanPublish(pubRoom, player.id, pubPublish);
 
-        if (aliveMafiaIds.has(player.id)) {
-          await this.voiceProvider.setCanPublish(mafRoom, player.id, mafPublish);
-        } else if (player.status !== 'alive') {
-          await this.voiceProvider.removeParticipant(mafRoom, player.id);
+          if (aliveMafiaIds.has(player.id)) {
+            await this.voiceProvider.setCanPublish(mafRoom, player.id, mafPublish);
+          } else if (player.status !== 'alive') {
+            await this.voiceProvider.removeParticipant(mafRoom, player.id);
+          }
+        } catch {
+          // Ignore individual player sync error so subsequent players are not blocked
         }
       }
 

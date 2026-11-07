@@ -20,6 +20,7 @@ export class LiveKitProvider implements VoiceProvider {
     room: string,
     identity: string,
     name: string,
+    canPublish: boolean = true,
   ): Promise<{ url: string; token: string }> {
     const at = new AccessToken(this.apiKey, this.apiSecret, {
       identity,
@@ -30,7 +31,7 @@ export class LiveKitProvider implements VoiceProvider {
     at.addGrant({
       room,
       roomJoin: true,
-      canPublish: false,
+      canPublish,
       canSubscribe: true,
       canPublishData: false,
     });
@@ -42,11 +43,15 @@ export class LiveKitProvider implements VoiceProvider {
   }
 
   async setCanPublish(room: string, identity: string, canPublish: boolean): Promise<void> {
-    await this.roomService.updateParticipant(room, identity, undefined, {
-      canPublish,
-      canSubscribe: true,
-      canPublishData: false,
-    });
+    try {
+      await this.roomService.updateParticipant(room, identity, undefined, {
+        canPublish,
+        canSubscribe: true,
+        canPublishData: false,
+      });
+    } catch {
+      // Ignore if participant not connected yet
+    }
   }
 
   async removeParticipant(room: string, identity: string): Promise<void> {
