@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { useGameStore } from '../store/useGameStore';
 import { t } from '../i18n';
-import { Plus, LogIn, AlertCircle } from 'lucide-react';
+import { Plus, LogIn, AlertCircle, HelpCircle } from 'lucide-react';
+import { HowToPlayModal } from '../components/HowToPlayModal';
 
 export const Home: React.FC = () => {
   const { createRoom, joinRoom, error, clearError, connected } = useGameStore();
   const [nickname, setNickname] = useState('');
   const [roomCode, setRoomCode] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -133,9 +135,23 @@ export const Home: React.FC = () => {
                 )}
               </button>
             </form>
+
+            {/* How to Play Guide Button */}
+            <div className="pt-2 border-t border-slate-800">
+              <button
+                type="button"
+                onClick={() => setShowGuide(true)}
+                className="w-full py-2.5 px-4 rounded-xl border border-slate-800 bg-slate-950/70 hover:bg-slate-800 hover:border-slate-700 text-slate-300 hover:text-white font-semibold text-xs flex items-center justify-center gap-2 transition shadow-inner"
+              >
+                <HelpCircle className="w-4 h-4 text-amber-400" />
+                <span>কীভাবে খেলবেন ও চরিত্র পরিচিতি</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
+
+      <HowToPlayModal isOpen={showGuide} onClose={() => setShowGuide(false)} />
     </div>
   );
 };
