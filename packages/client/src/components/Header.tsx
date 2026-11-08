@@ -7,6 +7,7 @@ import { useGameStore } from '../store/useGameStore';
 import { t, setLocale, getLocale } from '../i18n';
 import { LogOut } from 'lucide-react';
 import type { Phase } from '@ontorale/shared';
+import ontoraleLogo from '../assets/ontorale-logo.png';
 
 interface HeaderProps {
   phase: Phase;
@@ -48,7 +49,7 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="max-w-5xl mx-auto flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <img
-            src="/ontorale-logo.png"
+            src={ontoraleLogo}
             alt="Ontorale Logo"
             className="w-8 h-8 sm:w-9 sm:h-9 object-contain drop-shadow"
           />

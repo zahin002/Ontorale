@@ -94,15 +94,23 @@ export const useGameStore = create<GameStore>((set, get) => ({
     let s = get().socket;
     if (s && s.connected) return s;
 
+    const isViteDev =
+      typeof window !== 'undefined' &&
+      window.location.port !== '' &&
+      window.location.port !== '3000' &&
+      window.location.port !== '80' &&
+      window.location.port !== '443';
+
     const serverUrl =
       import.meta.env.VITE_SERVER_URL ||
-      (typeof window !== 'undefined' && window.location.port === '5173'
-        ? `${window.location.protocol}//${window.location.hostname}:3000`
-        : undefined);
+      (isViteDev ? `${window.location.protocol}//${window.location.hostname}:3000` : undefined);
 
     s = io(serverUrl, {
       transports: ['websocket', 'polling'],
       autoConnect: true,
+      reconnection: true,
+      reconnectionAttempts: Infinity,
+      reconnectionDelay: 1000,
     });
 
     s.on('connect', () => {

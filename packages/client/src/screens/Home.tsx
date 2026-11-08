@@ -3,6 +3,7 @@ import { useGameStore } from '../store/useGameStore';
 import { t } from '../i18n';
 import { Plus, LogIn, AlertCircle, HelpCircle } from 'lucide-react';
 import { HowToPlayModal } from '../components/HowToPlayModal';
+import ontoraleLogo from '../assets/ontorale-logo.png';
 
 export const Home: React.FC = () => {
   const { createRoom, joinRoom, error, clearError, connected } = useGameStore();
@@ -32,7 +33,7 @@ export const Home: React.FC = () => {
       <div className="max-w-md w-full bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-2xl backdrop-blur">
         <div className="text-center mb-8 flex flex-col items-center">
           <img
-            src="/ontorale-logo.png"
+            src={ontoraleLogo}
             alt="অন্তরালে - Ontorale"
             className="w-48 sm:w-56 h-auto object-contain drop-shadow-[0_10px_25px_rgba(225,29,72,0.3)] hover:scale-105 transition-transform duration-300"
           />

@@ -61,12 +61,18 @@ export function createServer(
             "'self'",
             'ws:',
             'wss:',
+            'http:',
+            'https:',
             ...(config.LIVEKIT_URL ? [config.LIVEKIT_URL] : []),
           ],
-          imgSrc: ["'self'", 'data:'],
+          imgSrc: ["'self'", 'data:', 'blob:', 'http:', 'https:'],
+          upgradeInsecureRequests: null,
         },
       },
+      strictTransportSecurity:
+        config.NODE_ENV === 'production' ? { maxAge: 31536000, includeSubDomains: true } : false,
       crossOriginEmbedderPolicy: false,
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
     }),
   );
 
@@ -103,13 +109,14 @@ export function createServer(
     pingInterval: 10_000,
     pingTimeout: 10_000,
     maxHttpBufferSize: 10_000,
-    cors:
-      config.NODE_ENV === 'production'
-        ? undefined
-        : {
-            origin: config.CLIENT_ORIGIN,
-            methods: ['GET', 'POST'],
-          },
+    cors: {
+      origin: (_origin, callback) => {
+        // Allow all valid browser connections across localhost, LAN IPs, and production domains
+        callback(null, true);
+      },
+      methods: ['GET', 'POST'],
+      credentials: true,
+    },
   });
 
   registerSocketHandlers(io, roomManager, config);
