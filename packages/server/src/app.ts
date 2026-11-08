@@ -1,6 +1,7 @@
 import express, { type Express } from 'express';
 import http from 'node:http';
 import path from 'node:path';
+import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { Server as SocketIOServer } from 'socket.io';
 
@@ -113,9 +114,13 @@ export function createServer(
 
   registerSocketHandlers(io, roomManager, config);
 
-  // Serve static files in production or test mode
-  if (config.NODE_ENV === 'production' || config.NODE_ENV === 'test') {
-    const clientDist = path.resolve(__dirname, '../../client/dist');
+  // Serve static files in production, test, or whenever client dist is built
+  const clientDist = path.resolve(__dirname, '../../client/dist');
+  if (
+    config.NODE_ENV === 'production' ||
+    config.NODE_ENV === 'test' ||
+    fs.existsSync(path.join(clientDist, 'index.html'))
+  ) {
     app.use(express.static(clientDist));
     app.get('*', (_req, res) => {
       res.sendFile(path.join(clientDist, 'index.html'));

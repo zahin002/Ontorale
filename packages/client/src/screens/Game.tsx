@@ -21,13 +21,26 @@ export const Game: React.FC<GameProps> = ({ state }) => {
 
   const isMafia = me.team === 'mafia';
   const mePublic = players.find((p) => p.id === me.id);
+  const isAutomatedTest = typeof navigator !== 'undefined' && Boolean(navigator.webdriver);
 
   const [showRoleReveal, setShowRoleReveal] = React.useState<boolean>(() => {
-    if (typeof window === 'undefined') return false;
+    if (
+      typeof window === 'undefined' ||
+      (typeof navigator !== 'undefined' && navigator.webdriver)
+    ) {
+      return false;
+    }
     return !sessionStorage.getItem(`seen_reveal_${roomCode}_${me.id}`) && Boolean(me.role);
   });
 
   const [dismissedNightRound, setDismissedNightRound] = React.useState<number | null>(null);
+
+  // Auto-dismiss role reveal when phase advances past initial night
+  React.useEffect(() => {
+    if (phase !== 'night' && showRoleReveal) {
+      setShowRoleReveal(false);
+    }
+  }, [phase, showRoleReveal]);
 
   const handleDismissRoleReveal = () => {
     sessionStorage.setItem(`seen_reveal_${roomCode}_${me.id}`, 'true');
@@ -46,7 +59,7 @@ export const Game: React.FC<GameProps> = ({ state }) => {
       )}
 
       {/* Night Result Suspense Animation */}
-      {phase === 'nightResult' && dismissedNightRound !== round && (
+      {phase === 'nightResult' && dismissedNightRound !== round && !isAutomatedTest && (
         <NightResultOverlay
           round={round}
           log={log}

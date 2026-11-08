@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "tsup --watch --onSuccess \"node dist/index.js\"",
     "build": "tsup src/index.ts --format esm --clean --no-splitting",
+    "start": "node dist/index.js",
     "typecheck": "tsc --noEmit",
     "test:unit": "vitest run src/",
     "test:integration": "vitest run test/integration"

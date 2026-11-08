@@ -86,7 +86,9 @@ export const RoleRevealOverlay: React.FC<RoleRevealOverlayProps> = ({ role, team
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-50 bg-black/95 backdrop-blur-xl flex flex-col items-center justify-center p-6 text-center select-none animate-in fade-in duration-500"
+      data-testid="role-reveal-overlay"
+      onClick={onDismiss}
+      className="fixed inset-0 z-50 bg-black/95 backdrop-blur-xl flex flex-col items-center justify-center p-6 text-center select-none animate-in fade-in duration-500 cursor-pointer"
     >
       {stage === 'anticipation' ? (
         <div className="space-y-4 max-w-md animate-pulse">
@@ -137,7 +139,11 @@ export const RoleRevealOverlay: React.FC<RoleRevealOverlayProps> = ({ role, team
           <div className="pt-2">
             <button
               type="button"
-              onClick={onDismiss}
+              data-testid="dismiss-role-reveal"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDismiss();
+              }}
               className={`px-6 py-2.5 rounded-xl font-bold text-sm text-white shadow-xl transition inline-flex items-center gap-2 hover:scale-105 active:scale-95 ${
                 isMafia
                   ? 'bg-red-600 hover:bg-red-500 border border-red-500'

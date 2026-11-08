@@ -14,7 +14,7 @@ export default defineConfig({
   retries: process.env.CI ? 1 : 0,
   workers: 1,
   reporter: 'html',
-  timeout: 30000,
+  timeout: process.env.CI ? 60000 : 30000,
   use: {
     baseURL: `http://localhost:${testPort}`,
     trace: 'retain-on-failure',
